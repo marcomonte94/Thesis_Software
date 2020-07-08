@@ -1,3 +1,0 @@
-ID dei SiPM che hanno dato delle curve IV brutte:
-
-37, 28

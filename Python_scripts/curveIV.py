@@ -117,7 +117,7 @@ def fitBreakDown(input_file):
 
     dVbr = np.sqrt(d*pcov*dT)
 
-    plt.figure()
+    plt.figure("{}".format(input_file))
     plt.plot(v, np.sqrt(i), label='I-V curve')
     plt.xlabel('Voltage [V]')
     plt.ylabel('$\sqrt{I}$ [$\sqrt{A}$]')
