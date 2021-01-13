@@ -12,6 +12,7 @@ class SiPM:
         self.tau_af = 100          # after-pulse time (ns)
         self.triggers=np.array([]) # list of all trigger events (empty at starting)
         self.matrix = np.zeros(shape=(int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))))
+        self.time_map = np.full(shape=(int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))), np.nan)
         self.ct_counts = 0
         self.af_counts = 0
     '''
