@@ -5,8 +5,6 @@ from scipy.optimize import curve_fit
 import argparse
 from analysis_workflow import gain, cross_talk, after_pulse
 
-datapath = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11'
-voltage_dir = list(os.listdir(f'{datapath}'))
 
 def compute_results(voltage, datapath):
     #g, ct, af = [], [], []
@@ -14,7 +12,7 @@ def compute_results(voltage, datapath):
     with open(f'{datapath}/results.txt', 'w') as fileresults:
         fileresults.write('# Gain   Cross-talk  After-pulse \n')
 
-        for i in range(len(voltage_dir)):
+        for i in range(0, len(voltage_dir)):
 
             print('Sono a voltaggio {}\n'.format(voltage_dir[i]))
             areas =np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_areas.txt', unpack=True)
@@ -43,17 +41,18 @@ def plot_results(voltage, g, ct, af):
 
     Vbr = -popt[0] / popt[1]
     d = np.matrix([-1/popt[1], -Vbr/popt[1]])
-    dT = np.transpose(d)    
+    dT = np.transpose(d)
     pcov = np.matrix(pcov)
     dVbr = np.sqrt(d*pcov*dT)
     print(f'V Breakdown: {Vbr} +/- {dVbr}')
-
+    
     plt.figure()
     plt.plot(voltage, ct, 'o')
     plt.figure()
     plt.plot(voltage, af, 'o')
+    
     plt.show()
-
+    
 
 if __name__ == '__main__':
 
@@ -64,10 +63,13 @@ if __name__ == '__main__':
 
     datapath = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}'
     voltage_dir = list(os.listdir(f'{datapath}'))
-    voltage = np.array([116, 117, 118, 119, 120, 121, 122, 123, 124])
+    if args.id == 'id1':
+        voltage = np.array([120, 121, 122, 123, 124, 125, 126, 127, 128])
+    else:
+        voltage = np.array([116, 117, 118, 119, 120, 121, 122, 123, 124])
 
 
-    if args.write == '0':       
+    if args.write == '0':
         g, ct, af = np.loadtxt(f'{datapath}/results.txt', unpack=True)
         plot_results(voltage, g, ct, af)
 

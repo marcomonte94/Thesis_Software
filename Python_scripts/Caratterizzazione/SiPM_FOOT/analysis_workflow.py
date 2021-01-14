@@ -75,10 +75,10 @@ def wf_data(wf_path, res_path, n_wf, threshold):
 def gain(areas):
         
     plt.figure()
-    y_data, edges, _ = plt.hist(areas, bins=300)
+    y_data, edges, _ = plt.hist(areas, bins=250)
     x_data = 0.5 * (edges[1:] + edges[:-1])
 
-    peakHisto, _ = find_peaks(y_data, prominence=40)
+    peakHisto, _ = find_peaks(y_data, height=180, prominence=50)
     plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
     
     def gaus(x, a, mu, sigma):
@@ -105,6 +105,7 @@ def gain(areas):
     gain = (popt2[1] - popt1[1]) / (1.6e-19 * 1e4)
     
     return gain
+    
     #return 0
 
 def make_scatterplot(all_delay, all_amplitude):
@@ -119,9 +120,10 @@ def make_scatterplot(all_delay, all_amplitude):
 def cross_talk(all_amplitude, p=80):
 
     plt.figure()
-    ydata, edges, _ = plt.hist(all_amplitude, bins=120, orientation='horizontal')
+    plt.title('Amplitudes')
+    ydata, edges, _ = plt.hist(all_amplitude, bins=120, orientation='horizontal', label='All amplitudes')
     xdata = 0.5 * (edges[1:] + edges[:-1])
-
+    
     xcdf = np.sort(all_amplitude)
     xcdf[::-1].sort()
     n = xcdf.size
@@ -129,7 +131,7 @@ def cross_talk(all_amplitude, p=80):
     
     plt.plot(ycdf, xcdf)
 
-    peaksHisto, _ = find_peaks(ydata, height=150, prominence=p)
+    peaksHisto, _ = find_peaks(ydata, height=200, prominence=p)
     plt.plot(ydata[peaksHisto], xdata[peaksHisto], "x", color='black')
     plt.xscale('log')
 
@@ -161,7 +163,7 @@ def after_pulse(all_delay):
     xfit = x_data[x_data>-1]
     yfit = y_data[x_data>-1]
     popt, pcov = curve_fit(fitfunc, xfit, yfit)
-    plt.plot(xfit, fitfunc(xfit, *popt))
+    #plt.plot(xfit, fitfunc(xfit, *popt))
     
     plt.figure()
     ydata, _, _ = plt.hist(all_delay, bins=bins_log)
@@ -185,13 +187,13 @@ def after_pulse(all_delay):
 
 if __name__ == '__main__':
     
-    path = 'C:/Users/Marco/Desktop/id11/124'
-    res_path = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/124' 
-    areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.018)
+    path = 'C:/Users/Marco/Desktop/id1/128'
+    res_path = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id1/128' 
+    areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.02)
     
     make_scatterplot(all_delay, all_amplitude)
     g = gain(areas)
-    ct = cross_talk(all_delay, all_amplitude, 80)
+    ct = cross_talk(all_amplitude, 150)
     r = after_pulse(all_delay)
 
     print('Gain: {}'.format(g))

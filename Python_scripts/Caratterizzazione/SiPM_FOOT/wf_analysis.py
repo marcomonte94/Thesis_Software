@@ -49,7 +49,7 @@ def wf_correction(time, amplDLED, threshold):
         if wf_ok[i]<0:
             undershoot[i] = wf_ok[i]
 
-    for i in range(5, len(peaks)-5):
+    for i in range(10, len(peaks)-10):
         amplDLED[peaks[i]-1000 : peaks[i]+2000] -= undershoot*amplDLED[peaks[i]]
     #plt.figure()
     #plt.plot(wf_ok)
@@ -115,7 +115,7 @@ def recovery_time(time, ampl):
 
 if __name__ == '__main__':
 
-    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id11/116')
+    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id1/116')
     trc = Trc()
 
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
         print("Sto facendo il file {}/n".format(input_file))
 
-        wf_path = 'C:/Users/Marco/Desktop/id11/116/{}.'.format(input_file)
+        wf_path = 'C:/Users/Marco/Desktop/id1/116/{}.'.format(input_file)
         time, ampl, d = trc.open(wf_path)
         ampl = -ampl
         timeDLED, amplDLED = DLED(time, ampl, 50)
