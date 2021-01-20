@@ -1,26 +1,36 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-class SiPM:
+class SiPM: 
     ''' Class describing a SiPM'''
     def __init__(self, ncell, pde, p_ct, p_af):
-        '''Argments'''
-        self.ncell = ncell         # number of total cells
-        self.pde = pde             # photon detection efficency
-        self.p_ct = p_ct           # cross-talk probability
-        self.p_af = p_af           # after-pulse probability
-        self.tau_af = 100          # after-pulse time (ns)
-        self.triggers=np.array([]) # list of all trigger events (empty at starting)
+        '''Arguments'''
+        self.ncell = ncell           # number of total cells
+        self.pde = pde               # photon detection efficency
+        self.p_ct = p_ct             # cross-talk probability
+        self.p_af = p_af             # after-pulse probability
+        self.tau_af = 100            # after-pulse time (ns)
+        self.overvoltage = 8         # V overvoltage
+        self.recovery_time = 40      # cell recovey time
+        self.triggers=np.array([])   # list of all trigger events (empty at starting)
         self.matrix = np.zeros(shape=(int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))))
-        self.time_map = np.full(shape=(int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))), np.nan)
+        self.time_map = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))), np.nan)
         self.ct_counts = 0
         self.af_counts = 0
-    '''
-    def create_sipm_matrix(self):
 
-        m = np.zeros(shape=(int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))))
-        return m
-    '''
+
+    def eval_pde(self, ev):
+
+        return np.random.uniform() < self.pde
+
+    def eval_overvoltage(self, ev):
+
+        if np.isnan(self.time_map[ev[0], ev[1]]):
+            return self.overvoltage
+        else:
+            return self.overvoltage * (1 - np.exp(-(ev[2] - self.time_map[ev[0], ev[1]]) / self.recovery_time))
+    
+
     def eval_crosstalk(self, ev, nncell=4):
 
         p = 1 - ((1-self.p_ct)**(1/nncell))
@@ -48,6 +58,7 @@ class SiPM:
                 self.triggers = np.vstack((self.triggers, ([ev[0], ev[1]+1, ev[2]])))
                 self.matrix[ev[0], ev[1]+1] = 1
                 self.ct_counts += 1
+
 
     def eval_afterpulse(self, ev):
 
