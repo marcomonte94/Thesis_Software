@@ -15,13 +15,13 @@ def compute_area(inputfile):
     return area
 
 
-filepath = 'C:/Users/Marco/Desktop/Saturazione'
+filepath = 'C:/Users/Marco/Desktop/Saturazione/50mu'
 laser_directories = list(os.listdir(filepath))
 
 for i in range(len(laser_directories)):
     print(laser_directories[i])
     waveforms = list(os.listdir(f'{filepath}/{laser_directories[i]}'))
-    f = open(f'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/Aree/{laser_directories[i]}.txt', 'w')
+    f = open(f'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/Aree_50/{laser_directories[i]}.txt', 'w')
     for wf_j in waveforms:
         a = compute_area(f'{filepath}/{laser_directories[i]}/{wf_j}')
         f.write(f'{a}\n')

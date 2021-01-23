@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 
-laser, curr, dark = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent.txt', unpack=True)
+laser, curr, dark = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent_single_sipm_25.txt', unpack=True)
 photocurrent = - (curr - dark)
 
-filepath = 'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/Aree' #/aree_8.txt'
+filepath = 'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/Aree_25' #/aree_8.txt'
 datalist = list(os.listdir(filepath))
 mu, sigma = np.array([]), np.array([])
 
@@ -33,34 +33,41 @@ for ifile in datalist:
     plt.plot(xdata, gaus(xdata, *popt), color='red')
 
 plt.figure()
+photocurrent = photocurrent / 0.37
 plt.plot(photocurrent, mu, 'o')
 
 e = 1.6e-19
 R = 50
-G = 554046.5739371531
+#G = 554046.5739371531 # foot
+#G = # 50mu
+#G = 876702.7516737487 #25mu
+G = 7e5
+#G = 1.7e6
 Eph = 4.9e-19
-responsivity = 0.067
+responsivity = 0.0732402716282601
 nu = 1e6
-f = 0.36
-Vov = 8.5
+f = 0.09
+Vov = 5
 dV = (mu / R) * nu * 2000
 
-G = (G / Vov) *( Vov - (mu / R) * nu /2 * 2000) 
-print(G)
-print(dV)
+G = (G / Vov) *( Vov - (mu / R) * nu  * 2000)
+#print(G)
+#print(dV)
 n_fired = mu / (e * R * G)
 n_ph = f * photocurrent / (nu * Eph * responsivity)
+dn =sigma / (e * R * G)
 
 def fitfunc(x, a, b):
-    return a *(1 - np.exp(-b*x)) 
+    return a *(1 - np.exp(-b*x))
 
-p0 = [40000, 1e-5]
+p0 = [4000, 1e-4]
 
-popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0)
+popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0, sigma=dn)
 print(popt)
 plt.figure()
 
-plt.plot(n_ph, n_fired, '.', color='black')
-plt.plot(n_ph, fitfunc(n_ph, *popt))
+plt.errorbar(n_ph, n_fired, dn, fmt='.')
+_x = np.linspace(0, max(n_ph), 100000)
+plt.plot(_x, fitfunc(_x, *popt))
 
 plt.show()

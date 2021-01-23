@@ -27,7 +27,7 @@ k.write_gpib_command('SOUR:VOLT:STAT ON')
 laser = np.arange(2, 10, 0.5)
 photocurrent, dark_current = np.zeros(len(laser)), np.zeros(len(laser))
 
-with open('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent.txt', 'w') as f:
+with open('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent_single_sipm_25.txt', 'w') as f:
 
     f.write('# Laser      Photocurrent    Dark Current \n')
 
