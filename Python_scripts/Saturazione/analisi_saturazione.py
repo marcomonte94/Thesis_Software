@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 
-laser, curr, dark = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent_single_sipm_25.txt', unpack=True)
+laser, curr, dark = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent_200khz.txt', unpack=True)
 photocurrent = - (curr - dark)
 
-filepath = 'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/Aree_25' #/aree_8.txt'
-datalist = list(os.listdir(filepath))
-mu, sigma = np.array([]), np.array([])
-
+filepath = 'C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/aree_200khz.txt' #/aree_8.txt'
+#datalist = list(os.listdir(filepath))
+#mu, sigma = np.array([]), np.array([])
+mu, sigma = np.loadtxt(filepath, unpack=True)
+'''
 for ifile in datalist:
     print(ifile)
     a = np.loadtxt(f'{filepath}/{ifile}', unpack=True)
@@ -31,21 +32,21 @@ for ifile in datalist:
     sigma = np.concatenate((sigma, np.array([popt[2]])))
 
     plt.plot(xdata, gaus(xdata, *popt), color='red')
-
+'''
 plt.figure()
-photocurrent = photocurrent / 0.37
+#photocurrent = photocurrent / 0.37
 plt.plot(photocurrent, mu, 'o')
 
 e = 1.6e-19
 R = 50
-#G = 554046.5739371531 # foot
+G = 554046.5739371531 # foot
 #G = # 50mu
 #G = 876702.7516737487 #25mu
-G = 7e5
+#G = 7e5
 #G = 1.7e6
 Eph = 4.9e-19
 responsivity = 0.0732402716282601
-nu = 1e6
+nu = 2e3
 f = 0.09
 Vov = 5
 dV = (mu / R) * nu * 2000
@@ -53,6 +54,8 @@ dV = (mu / R) * nu * 2000
 G = (G / Vov) *( Vov - (mu / R) * nu  * 2000)
 #print(G)
 #print(dV)
+mu *= 1e-9
+sigma *= 1e-9
 n_fired = mu / (e * R * G)
 n_ph = f * photocurrent / (nu * Eph * responsivity)
 dn =sigma / (e * R * G)

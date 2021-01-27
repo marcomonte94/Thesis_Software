@@ -18,7 +18,7 @@ class Microcell:
         if np.isnan(self.last_trigger_time):
             return self.overvoltage
         else:
-            return self.overvoltage * (1 - np.exp(-(ev[2] - self.last_trigger_time / self.t_recovery)))
+            return self.overvoltage * (1 - np.exp(-(ev[2] - self.last_trigger_time) / self.t_recovery))
             #return self.overvoltage +1
 
     def eval_gain(self, ev):
@@ -33,12 +33,19 @@ class SiPM:
         self.dark_count_rate = dark_count_rate
         self.p_ct = p_ct
         self.p_af = p_af
-        self.cellmap = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))), Microcell())
+        self.cellmap = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))),Microcell())
         self.triggers_in = np.empty([0,3], dtype=dt)
         self.triggers_out = np.empty([0,2], float)
         self.ct_counts = 0
         self.af_counts = 0
         self.det_counts = 0
+
+    def initialize_sipm(self):
+        
+        for i in range(int(np.sqrt(self.ncell))):
+            for j in range(int(np.sqrt(self.ncell))):
+                self.cellmap[i,j] = Microcell()
+        
 
 
     def detected_photons(self, all_photon):
@@ -107,10 +114,10 @@ class SiPM:
 
 
     def process_photon(self, ev):
-        self.triggers_in = np.sort(self.triggers_in, order='time' )
+        
         self.det_counts += 1
         g = self.cellmap[ev[0], ev[1]].eval_gain(ev)
-        self.cellmap[ev[0], ev[1]].gain = g
+        #self.cellmap[ev[0], ev[1]].gain = g
         self.add_crosstalk(ev)
         self.add_afterpulse(ev)
         self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
@@ -119,7 +126,8 @@ class SiPM:
 
 
 if __name__ == '__main__':
-    sipm = SiPM(100, 0.2, 0.5, 0.05, 0.05)
+    sipm = SiPM(57600, 0.2, 0.5, 0.05, 0.05)
+    sipm.initialize_sipm()
     photon_timestamps = np.arange(1, 50, 0.5)
     sipm.map_photons(photon_timestamps)
     sipm.add_darkcount(photon_timestamps[0], photon_timestamps[-1])
@@ -131,9 +139,11 @@ if __name__ == '__main__':
     #for i in range(len(sipm.triggers_in)):
     while i < len(sipm.triggers_in):
         #print(sipm.triggers_in[i])
+        sipm.triggers_in = np.sort(sipm.triggers_in, order='time' )
         sipm.process_photon(sipm.triggers_in[i])
         i += 1
 
+    print(sipm.triggers_out)
     print(f'Number of total events: {len(sipm.triggers_out)}')
     print(f'Number of detected photons: {len(photon_timestamps)}')
     print(f'Number of crosstalk: {sipm.ct_counts}')
@@ -142,7 +152,7 @@ if __name__ == '__main__':
     #print(len(photon_timestamps))
     #print(len(sipm.triggers_out))
     #print(sipm.ct_counts)
-    #print(sipm.triggers_out)
+    
     
 
 

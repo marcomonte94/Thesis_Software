@@ -10,15 +10,16 @@ from wf_analysis import DLED, wf_correction, compute_area
 import matplotlib.colors as mcolors
 
 
-
 def wf_data(wf_path, res_path, n_wf, threshold):
 
     all_amplitude = np.array([])
     all_delay = np.array([])
     areas = np.array([])
 
-    trc = Trc()
+    def dark_count_rate(all_amplitude, time, n_wf):
+        return len(all_amplitude) / (n_wf*((time[-1]-time[0]*1e-9)))
 
+    trc = Trc()
     allMyData = list(os.listdir(wf_path))
 
     for input_file in allMyData[:n_wf]:
@@ -26,9 +27,9 @@ def wf_data(wf_path, res_path, n_wf, threshold):
         print("Sto facendo il file {}\n".format(input_file))
 
         my_wf = '{}/{}.'.format(wf_path, input_file)
-        time, ampl, d = trc.open(my_wf)
+        time, ampl, _ = trc.open(my_wf)
         ampl = -ampl
-        timeDLED, amplDLED = DLED(time, ampl, 50)
+        _, amplDLED = DLED(time, ampl, 50)
 
         amplDLED = wf_correction(time, amplDLED, threshold)
 
@@ -52,10 +53,13 @@ def wf_data(wf_path, res_path, n_wf, threshold):
                 area = compute_area(ampl, peaks[i], dt)
                 area = np.array([area])
                 areas = np.concatenate((areas, area))
+
+        
                 
     fampl = open(f'{res_path}/all_ampl.txt', 'w')
     fareas = open(f'{res_path}/all_areas.txt', 'w')
     fdelay = open(f'{res_path}/all_delay.txt', 'w')
+    fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
     
     for i in areas:
         fareas.write(f'{i} \n')
@@ -68,6 +72,8 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     
     fdelay.close()
     fampl.close()
+
+    fdcr.write(f'{dark_count_rate(all_amplitude, time, n_wf)}')
 
     return areas, all_amplitude, all_delay
 
@@ -117,6 +123,8 @@ def make_scatterplot(all_delay, all_amplitude):
     #plt.scatter(all_delay, all_amplitude, marker='.')
 
 
+
+
 def cross_talk(all_amplitude, p=80):
 
     plt.figure()
@@ -140,7 +148,6 @@ def cross_talk(all_amplitude, p=80):
     ct = len(all_amplitude[all_amplitude > xdata[edgeIndex]]) / len(all_amplitude)
     return ct
     
-
 def after_pulse(all_delay):
 
     bins_log = 10**np.arange(-3, +2, 0.02)
@@ -187,9 +194,9 @@ def after_pulse(all_delay):
 
 if __name__ == '__main__':
     
-    path = 'C:/Users/Marco/Desktop/id1/128'
-    res_path = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id1/128' 
-    areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.02)
+    path = 'C:/Users/Marco/Desktop/id31/119'
+    res_path = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id31/119' 
+    areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
     
     make_scatterplot(all_delay, all_amplitude)
     g = gain(areas)

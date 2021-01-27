@@ -19,34 +19,34 @@ k.write_gpib_command("*RST")
 k.write_gpib_command("SYST:ZCH OFF")
 k.write_gpib_command('SOUR:VOLT:RANG 500')   
 #k.write_gpib_command('RANG:AUTO ON')
-k.write_gpib_command('CURR:RANG 2e-7')
+k.write_gpib_command('CURR:RANG 2e-6')
 k.write_gpib_command('SOUR:VOLT 0')   
 k.write_gpib_command('SOUR:VOLT:ILIM 2.5e-3')
-k.write_gpib_command('SOUR:VOLT:STAT ON')
+k.write_gpib_command('SOUR:VOLT:STAT OFF')
 
-laser = np.arange(2, 10, 0.5)
+laser = np.arange(1.2, 9., 0.2)
 photocurrent, dark_current = np.zeros(len(laser)), np.zeros(len(laser))
 
-with open('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/photocurrent_single_sipm_25.txt', 'w') as f:
+with open('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/prova.txt', 'w') as f:
 
     f.write('# Laser      Photocurrent    Dark Current \n')
 
     for i in range(len(laser)):
         print('Accendi il laser a {:.1f}'.format(laser[i]))
         input()
-        i_set, i_dark = np.zeros(30), np.zeros(30)
+        i_set, i_dark = np.zeros(10), np.zeros(10)
         for j in range(len(i_set)):
             print(float(k.send_gpib_command('READ?').split("A")[0]))
             i_set[j] = float(k.send_gpib_command('READ?').split("A")[0])
             time.sleep(0.3)
-        print(i_set.mean())
+        print(f'Media:{i_set.mean()}')
         print('\n Spegni il laser!')
         input()
         for j in range(len(i_dark)):
             print(float(k.send_gpib_command('READ?').split("A")[0]))
             i_dark[j] = float(k.send_gpib_command('READ?').split("A")[0])
             time.sleep(0.3)
-        print(i_dark.mean())
+        print(f'Media: {i_dark.mean()}')
         photocurrent[i] = i_set.mean()
         dark_current[i] = i_dark.mean()
         f.write(f'{laser[i]}    {photocurrent[i]}   {dark_current[i]} \n')
