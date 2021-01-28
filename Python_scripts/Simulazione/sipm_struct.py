@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import time
 
 dt = np.dtype([('x_coord', np.int), ('y_coord', np.int), ('time', np.float64)])
+all_time = np.arange(0, 500, 0.001)
 
 
 class Microcell:
@@ -24,6 +25,9 @@ class Microcell:
     def eval_gain(self, ev):
         return self.gain * self.eval_overvoltage(ev)
 
+    def generate_signal(self, t0, t):
+        return self.gain * np.heaviside(t-t0, 0) * np.exp(-(t-t0)/self.t_recovery)
+
     
 class SiPM: 
     ''' Class describing a SiPM'''
@@ -36,6 +40,7 @@ class SiPM:
         self.cellmap = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))),Microcell())
         self.triggers_in = np.empty([0,3], dtype=dt)
         self.triggers_out = np.empty([0,2], float)
+        self.signal_ampl = np.zeros(len(all_time))
         self.ct_counts = 0
         self.af_counts = 0
         self.det_counts = 0
@@ -122,13 +127,16 @@ class SiPM:
         self.add_afterpulse(ev)
         self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
         self.cellmap[ev[0], ev[1]].last_trigger_time = ev[2]
-
+        self.signal_ampl += self.cellmap[ev[0], ev[1]].generate_signal(ev[2], all_time)
+        
 
 
 if __name__ == '__main__':
     sipm = SiPM(57600, 0.2, 0.5, 0.05, 0.05)
     sipm.initialize_sipm()
     photon_timestamps = np.arange(1, 50, 0.5)
+    
+    
     sipm.map_photons(photon_timestamps)
     sipm.add_darkcount(photon_timestamps[0], photon_timestamps[-1])
     #print(sipm.triggers_in)
@@ -138,6 +146,7 @@ if __name__ == '__main__':
     i = 0
     #for i in range(len(sipm.triggers_in)):
     while i < len(sipm.triggers_in):
+        print(len(sipm.triggers_in)-i)
         #print(sipm.triggers_in[i])
         sipm.triggers_in = np.sort(sipm.triggers_in, order='time' )
         sipm.process_photon(sipm.triggers_in[i])
@@ -152,6 +161,8 @@ if __name__ == '__main__':
     #print(len(photon_timestamps))
     #print(len(sipm.triggers_out))
     #print(sipm.ct_counts)
+    plt.plot(all_time, sipm.signal_ampl)
+    plt.show()
     
     
 
