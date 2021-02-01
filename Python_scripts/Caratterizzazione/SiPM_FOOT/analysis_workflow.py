@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import argparse
 from math import modf
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
@@ -15,9 +16,7 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     all_amplitude = np.array([])
     all_delay = np.array([])
     areas = np.array([])
-
-    def dark_count_rate(all_amplitude, time, n_wf):
-        return len(all_amplitude) / (n_wf*((time[-1]-time[0]*1e-9)))
+    dcr = 0
 
     trc = Trc()
     allMyData = list(os.listdir(wf_path))
@@ -59,7 +58,7 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     fampl = open(f'{res_path}/all_ampl.txt', 'w')
     fareas = open(f'{res_path}/all_areas.txt', 'w')
     fdelay = open(f'{res_path}/all_delay.txt', 'w')
-    fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
+    #fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
     
     for i in areas:
         fareas.write(f'{i} \n')
@@ -73,7 +72,14 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     fdelay.close()
     fampl.close()
 
-    fdcr.write(f'{dark_count_rate(all_amplitude, time, n_wf)}')
+    dark_events = all_delay > 2e-7
+    dt = n_wf*0.002
+    fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
+    fdcr.write(f'{len(all_amplitude[dark_events])/dt}')
+    fdcr.close()
+
+
+    #fdcr.write(f'{dark_count_rate(all_amplitude, time, n_wf)}')
 
     return areas, all_amplitude, all_delay
 
@@ -84,7 +90,7 @@ def gain(areas):
     y_data, edges, _ = plt.hist(areas, bins=250)
     x_data = 0.5 * (edges[1:] + edges[:-1])
 
-    peakHisto, _ = find_peaks(y_data, height=180, prominence=50)
+    peakHisto, _ = find_peaks(y_data, height=180, prominence=100)
     plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
     
     def gaus(x, a, mu, sigma):
@@ -117,10 +123,11 @@ def gain(areas):
 def make_scatterplot(all_delay, all_amplitude):
 
     plt.figure()
-    bins_x = 10 ** np.linspace(-8.5, -5.5, 150)
-    plt.hist2d(all_delay, all_amplitude, bins=[bins_x, 80], norm=mcolors.PowerNorm(0.3), cmap='hot')
+    bins_x = 10 ** np.linspace(-8.5, -5.5, 200)
+    plt.hist2d(all_delay, all_amplitude, bins=[bins_x, 200], norm=mcolors.LogNorm(), cmap='jet')
     plt.xscale('log')
-    #plt.scatter(all_delay, all_amplitude, marker='.')
+    plt.xlim(5e-9, 5e-6)
+#plt.ylim(0, 0.12)
 
 
 
@@ -193,10 +200,22 @@ def after_pulse(all_delay):
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='SiPM analysis results')
+    parser.add_argument('id', help='SiPM ID and Voltage')
+    parser.add_argument('-w', '--write', help='Compute and process results', default = '0')
+    args = parser.parse_args()
+
+    if args.write == '0':
+        areas = np.loadtxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}/all_areas.txt', unpack=True)
+        all_amplitude = np.loadtxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}/all_ampl.txt', unpack=True)
+        all_delay = np.loadtxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}/all_delay.txt', unpack=True)
     
-    path = 'C:/Users/Marco/Desktop/id31/119'
-    res_path = 'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id31/119' 
-    areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
+
+    elif args.write == '1':
+        path = f'C:/Users/Marco/Desktop/{args.id}'
+        res_path = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}' 
+        areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
     
     make_scatterplot(all_delay, all_amplitude)
     g = gain(areas)

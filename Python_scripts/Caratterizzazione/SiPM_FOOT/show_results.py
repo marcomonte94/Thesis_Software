@@ -8,36 +8,40 @@ from analysis_workflow import gain, cross_talk, after_pulse
 
 def compute_results(voltage, datapath):
     #g, ct, af = [], [], []
+    voltage_dir = list(os.listdir(f'{datapath}'))
 
-    with open(f'{datapath}/results.txt', 'w') as fileresults:
-        fileresults.write('# Gain   Cross-talk  After-pulse \n')
+    with open(f'{datapath}/dcr.txt', 'w') as fileresults:
+
+        fileresults.write('#Dark-count-rate  Gain   Cross-talk  After-pulse \n')
 
         for i in range(0, len(voltage_dir)):
 
-            print('Sono a voltaggio {}\n'.format(voltage_dir[i]))
-            areas =np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_areas.txt', unpack=True)
-            ampl = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_ampl.txt', unpack=True)
-            delay = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_delay.txt', unpack=True)
+            if os.path.isdir(f'{datapath}/{voltage_dir[i]}'):
 
-            fileresults.write(f'{gain(areas)}   ')
-            plt.close()
-            fileresults.write(f'{cross_talk(ampl)}  ')
-            plt.close()
-            fileresults.write(f'{after_pulse(delay)}  ')
-            plt.close()
-            fileresults.write('\n')
+                print('Sono a voltaggio {}\n'.format(voltage_dir[i]))
+                areas =np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_areas.txt', unpack=True)
+                ampl = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_ampl.txt', unpack=True)
+                delay = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_delay.txt', unpack=True)
+                dcr = np.loadtxt(f'{datapath}/{voltage_dir[i]}/dark_count_rate.txt', unpack=True)
+
+                fileresults.write(f'{dcr}   ')
+                '''
+                fileresults.write(f'{gain(areas)}   ')
+                plt.close()
+                fileresults.write(f'{cross_talk(ampl)}  ')
+                plt.close()
+                fileresults.write(f'{after_pulse(delay)}  ')
+                plt.close()
+                '''
+                fileresults.write('\n')
 
 
-def plot_results(voltage, g, ct, af):
+def plot_results(voltage, dcr, g, ct, af):
 
     def fitfunc(x, a, b):
         return a + b * x
 
     popt, pcov = curve_fit(fitfunc, voltage, g)
-
-    plt.figure()
-    plt.plot(voltage, g, '.', color='black')
-    plt.plot(voltage, fitfunc(voltage, *popt), color='red')
 
     Vbr = -popt[0] / popt[1]
     d = np.matrix([-1/popt[1], -Vbr/popt[1]])
@@ -45,11 +49,16 @@ def plot_results(voltage, g, ct, af):
     pcov = np.matrix(pcov)
     dVbr = np.sqrt(d*pcov*dT)
     print(f'V Breakdown: {Vbr} +/- {dVbr}')
-    
+
     plt.figure()
-    plt.plot(voltage, ct, 'o')
+    plt.plot((voltage-Vbr)/2, g, '.', color='black')
+    plt.plot((voltage-Vbr)/2, fitfunc(voltage, *popt), color='red')
     plt.figure()
-    plt.plot(voltage, af, 'o')
+    plt.plot((voltage-Vbr)/2, ct, 'o')
+    plt.figure()
+    plt.plot((voltage-Vbr)/2, af, 'o')
+    plt.figure()
+    plt.plot((voltage-Vbr)/2, dcr, 'o')
     
     plt.show()
     
@@ -62,7 +71,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     datapath = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}'
-    voltage_dir = list(os.listdir(f'{datapath}'))
+    
     if args.id == 'id1':
         voltage = np.array([120, 121, 122, 123, 124, 125, 126, 127, 128])
     else:
@@ -70,8 +79,8 @@ if __name__ == '__main__':
 
 
     if args.write == '0':
-        g, ct, af = np.loadtxt(f'{datapath}/results.txt', unpack=True)
-        plot_results(voltage, g, ct, af)
+        dcr, g, ct, af = np.loadtxt(f'{datapath}/results.txt', unpack=True)
+        plot_results(voltage, dcr, g, ct, af)
 
     elif args.write == '1':
         compute_results(voltage, datapath)
