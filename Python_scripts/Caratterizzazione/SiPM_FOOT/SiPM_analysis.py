@@ -11,7 +11,7 @@ from analysis_workflow import wf_data, gain, cross_talk, after_pulse
 threshold = np.array([0.016, 0.017, 0.017, 0.017, 0.018, 0.018, 0.019, 0.019, 0.02])
 allGain, allCT, allAF = [], [], []
 
-ov_directories = 'C:/Users/Marco/Desktop/id1'
+ov_directories = 'C:/Users/Marco/Desktop/id11'
 listaFile = list(os.listdir(ov_directories))
 
 for i in range(len(listaFile)):
@@ -21,5 +21,5 @@ for i in range(len(listaFile)):
         print('Sono a {} V \n'.format(listaFile[i]))
 
         waveforms = f'{ov_directories}/{listaFile[i]}'
-        res_path = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id1/{listaFile[i]}'
+        res_path = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/{listaFile[i]}'
         areas, all_amplitude, all_delay = wf_data(waveforms, res_path, 40, threshold[i])    
