@@ -80,6 +80,7 @@ if __name__ == '__main__':
 
     if args.write == '0':
         dcr, g, ct, af = np.loadtxt(f'{datapath}/results.txt', unpack=True)
+        dcr = dcr - af*dcr
         plot_results(voltage, dcr, g, ct, af)
 
     elif args.write == '1':

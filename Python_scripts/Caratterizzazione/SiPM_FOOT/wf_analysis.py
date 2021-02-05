@@ -51,9 +51,9 @@ def wf_correction(time, amplDLED, threshold):
 
     for i in range(10, len(peaks)-10):
         amplDLED[peaks[i]-1000 : peaks[i]+2000] -= undershoot*amplDLED[peaks[i]]
-    #plt.figure()
-    #plt.plot(wf_ok)
-    #plt.plot(undershoot)
+    plt.figure()
+    plt.plot(wf_ok)
+    plt.plot(undershoot)
 
     return amplDLED
 
@@ -66,15 +66,15 @@ def compute_area(ampl, picco, dt):
     return area
 
 
-def recovery_time(time, ampl):
+def recovery_time(time, ampl, threshold):
 
-    timeDLED, amplDLED = DLED(time,ampl, 20)
-    peaks, _ = find_peaks(-amplDLED, height=0.0085, prominence=0.02)
+    timeDLED, amplDLED = DLED(time, ampl, 50)
+    peaks, _ = find_peaks(amplDLED, height=threshold, prominence=threshold/2)
     peak_timestamp = time[peaks]
     peak_amplitude = amplDLED[peaks]
     time_distance = peak_timestamp[1:]-peak_timestamp[:-1]
 
-    areas = np.array([])
+    #areas = np.array([])
     single_wf = np.zeros(3000)
 
     for i in range(1, len(peaks)-2):
@@ -115,7 +115,7 @@ def recovery_time(time, ampl):
 
 if __name__ == '__main__':
 
-    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id1/116')
+    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id11/116')
     trc = Trc()
 
 
@@ -123,8 +123,9 @@ if __name__ == '__main__':
 
         print("Sto facendo il file {}/n".format(input_file))
 
-        wf_path = 'C:/Users/Marco/Desktop/id1/116/{}.'.format(input_file)
+        wf_path = 'C:/Users/Marco/Desktop/id11/116/{}.'.format(input_file)
         time, ampl, d = trc.open(wf_path)
+        print(d)
         ampl = -ampl
         timeDLED, amplDLED = DLED(time, ampl, 50)
 

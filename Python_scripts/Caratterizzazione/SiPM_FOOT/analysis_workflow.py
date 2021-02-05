@@ -16,7 +16,6 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     all_amplitude = np.array([])
     all_delay = np.array([])
     areas = np.array([])
-    dcr = 0
 
     trc = Trc()
     allMyData = list(os.listdir(wf_path))
@@ -72,10 +71,9 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     fdelay.close()
     fampl.close()
 
-    dark_events = all_delay > 2e-7
     dt = n_wf*0.002
     fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
-    fdcr.write(f'{len(all_amplitude[dark_events])/dt}')
+    fdcr.write(f'{len(all_amplitude)/dt}')
     fdcr.close()
 
 
@@ -215,7 +213,7 @@ if __name__ == '__main__':
     elif args.write == '1':
         path = f'C:/Users/Marco/Desktop/{args.id}'
         res_path = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}' 
-        areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
+        areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.02)
     
     make_scatterplot(all_delay, all_amplitude)
     g = gain(areas)
