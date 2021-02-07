@@ -128,8 +128,6 @@ def make_scatterplot(all_delay, all_amplitude):
 #plt.ylim(0, 0.12)
 
 
-
-
 def cross_talk(all_amplitude, p=80):
 
     plt.figure()
@@ -144,7 +142,7 @@ def cross_talk(all_amplitude, p=80):
     
     plt.plot(ycdf, xcdf)
 
-    peaksHisto, _ = find_peaks(ydata, height=200, prominence=p)
+    peaksHisto, _ = find_peaks(ydata, height=300, prominence=p)
     plt.plot(ydata[peaksHisto], xdata[peaksHisto], "x", color='black')
     plt.xscale('log')
 
@@ -213,7 +211,7 @@ if __name__ == '__main__':
     elif args.write == '1':
         path = f'C:/Users/Marco/Desktop/{args.id}'
         res_path = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/{args.id}' 
-        areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.02)
+        areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
     
     make_scatterplot(all_delay, all_amplitude)
     g = gain(areas)

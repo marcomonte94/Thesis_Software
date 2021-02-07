@@ -36,7 +36,8 @@ def wf_correction(time, amplDLED, threshold):
 
     for i in range(5, len(peaks)-5):
 
-        if time_distance[i] > 500e-9 and time_distance[i+1] > 500e-9:
+        if time_distance[i] > 500e-9 and time_distance[i-1] > 500e-9:
+        #if time[peaks[i]] - time[peaks[i-1]] > 500e-9 and time[peaks[i+1]] - time[peaks[i]]> 500e-9:
 
             wfGood = amplDLED[peaks[i]-1000 : peaks[i]+2000]
             wfGood = wfGood / peak_amplitude[i]
@@ -51,79 +52,36 @@ def wf_correction(time, amplDLED, threshold):
 
     for i in range(10, len(peaks)-10):
         amplDLED[peaks[i]-1000 : peaks[i]+2000] -= undershoot*amplDLED[peaks[i]]
-    plt.figure()
-    plt.plot(wf_ok)
-    plt.plot(undershoot)
+    #plt.figure()
+    #plt.plot(wf_ok)
+    #plt.plot(undershoot)
 
     return amplDLED
 
 
 def compute_area(ampl, picco, dt):
 
-    baseline = ampl[picco-500:picco-100].mean()
-    ampl[picco-500:picco+400] = ampl[picco-500:picco+400]-baseline
-    area = (ampl[picco-500:picco+400]*dt).sum()
+    baseline = ampl[picco-200:picco-100].mean()
+    ampl[picco-200:picco+900] = ampl[picco-200:picco+900]-baseline
+    area = (ampl[picco-200:picco+900]*dt).sum()
+    #plt.figure()
+    #plt.plot(ampl[picco-200:picco+900])
+    #plt.plot(ampl[picco-200:picco-100])
+    #plt.show()
     return area
 
-
-def recovery_time(time, ampl, threshold):
-
-    timeDLED, amplDLED = DLED(time, ampl, 50)
-    peaks, _ = find_peaks(amplDLED, height=threshold, prominence=threshold/2)
-    peak_timestamp = time[peaks]
-    peak_amplitude = amplDLED[peaks]
-    time_distance = peak_timestamp[1:]-peak_timestamp[:-1]
-
-    #areas = np.array([])
-    single_wf = np.zeros(3000)
-
-    for i in range(1, len(peaks)-2):
-
-        area = compute_area(ampl, peaks[i], time[1]-time[0])
-
-        if area < 4e-9:
-
-            if time_distance[i] > 500e-9 and time_distance[i+1] > 500e-9:
-
-                wfGood = ampl[peaks[i]-500 : peaks[i]+2500]
-                #wfGood = wfGood / peak_amplitude[i]
-                single_wf = np.vstack((single_wf, wfGood))
-
-    single_wf = np.mean(single_wf, axis=0)
-
-    def f(x, a, b):
-        #return a*np.exp(-b*x)
-        return a - x*b
-
-    yfit = np.log(single_wf[600:1150])
-    #yfit = single_wf[600:1160]
-    tfit = np.arange(600, 1150) * 1e-10
-
-    popt, pcov = curve_fit(f, tfit, yfit)
-
-    plt.figure()
-    #plt.yscale('log')
-    plt.plot(np.arange(0, 3000) * 1e-10, single_wf)
-    #plt.plot(tfit, yfit)
-    plt.plot(tfit, np.exp(f(tfit, *popt)))
-
-    tau = 1 /popt[1]
-    dtau = np.sqrt(pcov.diagonal()[1])/(popt[1]**2)
-
-    return tau, dtau
 
 
 if __name__ == '__main__':
 
-    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id11/116')
+    allMyData = list = os.listdir('C:/Users/Marco/Desktop/id31/124')
     trc = Trc()
-
 
     for input_file in allMyData[:1]:
 
         print("Sto facendo il file {}/n".format(input_file))
 
-        wf_path = 'C:/Users/Marco/Desktop/id11/116/{}.'.format(input_file)
+        wf_path = 'C:/Users/Marco/Desktop/id31/124/{}.'.format(input_file)
         time, ampl, d = trc.open(wf_path)
         print(d)
         ampl = -ampl
@@ -134,7 +92,7 @@ if __name__ == '__main__':
     plt.plot(time, ampl, label='Waveform')
     #plt.plot(timeDLED, amplDLED+ampl, label='Delayed Waveform')
     plt.legend(loc='best')
-    #plt.close()
+    plt.close()
 
     plt.figure()
     plt.title('DLED Waveform')
@@ -144,7 +102,7 @@ if __name__ == '__main__':
     plt.plot(time[peaks], amplDLED[peaks], 'x', color='black')
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude (V)')
-    #plt.close()
+    plt.close()
     #amplDLED = - amplDLED
     amplDLED = wf_correction(timeDLED, amplDLED, 0.016)
 
@@ -163,17 +121,8 @@ if __name__ == '__main__':
     plt.plot(time[peaks], ampl[peaks], 'x', color='black')
     plt.xlabel('Time (ns)')
     plt.ylabel('Amplitude (V)')
-
-    '''
-    plt.figure()
-    plt.title('Single-cell wf')
-    plt.plot(oneCell_wf(time, ampl), label='Single-cell wf')
-    #plt.yscale('log')
-    '''
-    '''
-    tau, dtau = recovery_time(time, ampl)
-    print('Recovey time: ({:.2f} +/- {:.2f}) ns'.format(tau*1e9, dtau*1e9))
-    '''
+    plt.close()
+    
     plt.show()
 
 
