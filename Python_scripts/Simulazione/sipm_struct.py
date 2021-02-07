@@ -8,10 +8,12 @@ all_time = np.arange(0, 500, 0.001)
 
 class Microcell:
 
-    def __init__(self, gain=1, overvoltage=1, t_recovery=30):
+    def __init__(self, gain=1, overvoltage=1, t_df=20, t_ds=20, t_rise=3.5):
         self.gain = gain # expressed as unit of overvoltage
         self.overvoltage = overvoltage
-        self.t_recovery = t_recovery
+        self.t_df = t_df
+        self.t_ds = t_ds
+        self.t_rise = t_rise
         self.tau_af = 100
         self.last_trigger_time = np.nan
 
@@ -19,13 +21,16 @@ class Microcell:
         if np.isnan(self.last_trigger_time):
             return self.overvoltage
         else:
-            return self.overvoltage * (1 - np.exp(-(ev[2] - self.last_trigger_time) / self.t_recovery))
+            return self.overvoltage * (1 - np.exp(-(ev[2] - self.last_trigger_time) / self.t_ds))
 
     def eval_gain(self, ev):
         return self.gain * self.eval_overvoltage(ev)
 
     def generate_signal(self, t0, t):
-        return self.gain * np.heaviside(t-t0, 0) * np.exp(-(t-t0)/self.t_recovery)
+        a1, a2 = 7e-2, 3.2e-2
+        signal = (a1*np.exp(-(t-t0)/self.t_ds) + a2*np.exp(-(t-t0)/self.t_df) - (a1+a2)*np.exp(-(t-t0)/self.t_rise))
+        signal *= np.heaviside(t-t0, 0) 
+        return self.gain * signal
 
     
 class SiPM: 
@@ -135,7 +140,7 @@ class SiPM:
 if __name__ == '__main__':
     sipm = SiPM(57600, 0.2, 0.5, 0.05, 0.05)
     sipm.initialize_sipm()
-    photon_timestamps = np.arange(1, 300, 0.5)
+    photon_timestamps = np.arange(1, 20, 0.5)
     
     
     sipm.map_photons(photon_timestamps)
