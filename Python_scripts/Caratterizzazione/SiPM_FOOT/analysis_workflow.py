@@ -84,33 +84,38 @@ def wf_data(wf_path, res_path, n_wf, threshold):
 
 def gain(areas):
         
-    plt.figure()
-    y_data, edges, _ = plt.hist(areas, bins=250)
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
+    y_data, edges, _ = plt.hist(areas, bins=250, color='blue', label='Occurrences')
     x_data = 0.5 * (edges[1:] + edges[:-1])
+    plt.xlim(0, 3e-9)
+    plt.xlabel('Waveforms area [$V\cdot s$]')
+    plt.ylabel('Counts')
 
     peakHisto, _ = find_peaks(y_data, height=180, prominence=100)
-    plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
+    #plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
     
     def gaus(x, a, mu, sigma):
         return a * norm.pdf(x, mu, sigma)
 
     #x_fit1 = x_data[np.logical_and(x_data > 2e-9, x_data < 5e-9)]
     #y_fit1 = y_data[np.logical_and(x_data > 2e-9, x_data < 5e-9)]
-    mask_fit1 = np.logical_and(x_data > x_data[peakHisto[0]]-2e-10, x_data < x_data[peakHisto[0]]+2e-10)    
+    mask_fit1 = np.logical_and(x_data > x_data[peakHisto[0]]-2e-10, x_data < x_data[peakHisto[0]]+1.7e-10)    
     x_fit1 = x_data[mask_fit1]
     y_fit1 = y_data[mask_fit1]
 
     p0 = [y_data[peakHisto[0]], x_data[peakHisto[0]], 1e-10]
     popt1, pcov1 = curve_fit(gaus, x_fit1, y_fit1, p0)
     
-    mask_fit2 = np.logical_and(x_data > x_data[peakHisto[1]]-1e-10, x_data < x_data[peakHisto[1]]+1e-10) 
+    mask_fit2 = np.logical_and(x_data > x_data[peakHisto[1]]-2e-10, x_data < x_data[peakHisto[1]]+2e-10) 
     x_fit2 = x_data[mask_fit2]
     y_fit2 = y_data[mask_fit2]
     p0 = [y_data[peakHisto[1]], x_data[peakHisto[1]], 1e-10]
     popt2, pcov2 = curve_fit(gaus, x_fit2, y_fit2, p0)
     
-    plt.plot(x_fit1, gaus(x_fit1, *popt1), color='red')
+    plt.plot(x_fit1, gaus(x_fit1, *popt1), color='red', label='Gaussian fit')
     plt.plot(x_fit2, gaus(x_fit2, *popt2), color='red')
+    plt.legend(loc='best')
 
     gain = (popt2[1] - popt1[1]) / (1.6e-19 * 1e4)
     
@@ -120,31 +125,40 @@ def gain(areas):
 
 def make_scatterplot(all_delay, all_amplitude):
 
-    plt.figure()
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
     bins_x = 10 ** np.linspace(-8.5, -5.5, 200)
     plt.hist2d(all_delay, all_amplitude, bins=[bins_x, 200], norm=mcolors.LogNorm(), cmap='jet')
     plt.xscale('log')
     plt.xlim(5e-9, 5e-6)
+    plt.xlabel('Time distance [$s$]')
+    plt.ylabel('Amplitude [$V$]')
+    plt.colorbar()
 #plt.ylim(0, 0.12)
 
 
 def cross_talk(all_amplitude, p=80):
 
-    plt.figure()
-    plt.title('Amplitudes')
-    ydata, edges, _ = plt.hist(all_amplitude, bins=120, orientation='horizontal', label='All amplitudes')
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
+    #plt.title('Amplitudes')
+    ydata, edges, _ = plt.hist(all_amplitude, bins=120, color='blue', orientation='horizontal', label='Occurrences')
     xdata = 0.5 * (edges[1:] + edges[:-1])
+    plt.ylabel('Amplitude [$V$]')
+    plt.xlabel('Counts')
     
     xcdf = np.sort(all_amplitude)
-    xcdf[::-1].sort()
+    _x = xcdf[::-1].sort()
     n = xcdf.size
     ycdf = np.arange(1, n+1) 
     
-    plt.plot(ycdf, xcdf)
+    #_y, _x = np.linspace(0, max(ycdf), 1000), np.linspace(0, max(_x), 1000)
+    plt.plot(ycdf, xcdf, color='red', label='Cumulative function')
 
     peaksHisto, _ = find_peaks(ydata, height=300, prominence=p)
-    plt.plot(ydata[peaksHisto], xdata[peaksHisto], "x", color='black')
+    #plt.plot(ydata[peaksHisto], xdata[peaksHisto], "x", color='black')
     plt.xscale('log')
+    plt.legend(loc='best')
 
     edgeIndex = int(modf((peaksHisto[1] + peaksHisto[0])/2)[1])
 
@@ -157,7 +171,8 @@ def after_pulse(all_delay):
     bins_norm = np.linspace(1e-3, 1e+2, 2000)
 
     all_delay *= 1e6
-    plt.figure()
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
     
     y_data, edges, _ = plt.hist(all_delay, bins=bins_norm)
     plt.close()
@@ -175,14 +190,16 @@ def after_pulse(all_delay):
     popt, pcov = curve_fit(fitfunc, xfit, yfit)
     #plt.plot(xfit, fitfunc(xfit, *popt))
     
-    plt.figure()
-    ydata, _, _ = plt.hist(all_delay, bins=bins_log)
-    
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
+    ydata, _, _ = plt.hist(all_delay, bins=bins_log, color='blue', label='Occurrences')
+    plt.ylabel('Counts')
+    plt.xlabel('Time distance [$s$]')
 
     _x = 0.5 * (bins_log[1:] + bins_log[:-1])
     _y = -popt[1]*popt[0]*(np.exp(-bins_log[1:]/popt[1]) - np.exp(-bins_log[:-1]/popt[1]))
     #print(len(y_data[y_data > _y]))
-    plt.plot(_x, _y, color='red')
+    plt.plot(_x, _y, color='red', label='Exponential fit')
     
     yaf = ydata[_x < 2e-1] - _y[_x < 2e-1]
     yaf = yaf[yaf > 0]
@@ -191,6 +208,7 @@ def after_pulse(all_delay):
     plt.xscale('log')
     plt.yscale('log')
     plt.ylim(0.1, 3e4)
+    plt.legend(loc='best')
 
     return yaf.sum()/ n_event
 
