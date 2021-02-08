@@ -44,11 +44,8 @@ mu = np.array([67.9, 95.5, 109.3, 121.2, 129.4, 139.2, 146.8, 157.2, 169.6, 175.
 photocurrent = np.array([5.73, 9.6, 11.9, 14.4, 16.2, 18.7, 20.8, 24, 28.7, 31.6, 34.3, 37.4, 40.2, 43.2, 47.2, 51.5, 53.8, 57.3, 60.8, 64.3, 68.6, 72.9, 77.3, 82.9, 87])
 e = 1.6e-19
 R = 50
-G = 554046.5739371531 # foot
-#G = # 50mu
-#G = 876702.7516737487 #25mu
-#G = 7e5
-#G = 1.7e6
+G = 551357.040194198 # foot
+
 Eph = 4.9e-19
 responsivity = 0.0732402716282601
 nu = 1e5
@@ -65,10 +62,12 @@ n_fired = mu / (e * R * G)
 n_ph = f * photocurrent / (nu * Eph * responsivity)
 #dn =sigma / (e * R * G)
 
-def fitfunc(x, a, b, x0):
-    return a *(1 - np.exp(-b*(x-x0)))
 
-p0 = [5000, 1e-15, 1]
+
+def fitfunc(x, a, b):
+    return a *(1 - np.exp(-b*(x)))
+
+p0 = [5000, 1e-15]
 
 popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0)#, sigma=dn)
 print(popt)
