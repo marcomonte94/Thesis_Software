@@ -52,9 +52,9 @@ def wf_correction(time, amplDLED, threshold):
 
     for i in range(10, len(peaks)-10):
         amplDLED[peaks[i]-1000 : peaks[i]+2000] -= undershoot*amplDLED[peaks[i]]
-    #plt.figure()
-    #plt.plot(wf_ok)
-    #plt.plot(undershoot)
+    plt.figure()
+    plt.plot(wf_ok)
+    plt.plot(undershoot)
 
     return amplDLED
 

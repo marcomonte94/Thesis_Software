@@ -92,8 +92,8 @@ def gain(areas):
     plt.xlabel('Waveforms area [$V\cdot s$]')
     plt.ylabel('Counts')
 
-    peakHisto, _ = find_peaks(y_data, height=180, prominence=100)
-    #plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
+    peakHisto, _ = find_peaks(y_data, height=180, prominence=70)
+    plt.plot(x_data[peakHisto], y_data[peakHisto], "x", color='black')
     
     def gaus(x, a, mu, sigma):
         return a * norm.pdf(x, mu, sigma)
@@ -118,8 +118,9 @@ def gain(areas):
     plt.legend(loc='best')
 
     gain = (popt2[1] - popt1[1]) / (1.6e-19 * 1e4)
+    #d_gain = np.sqrt((popt2[2]**2 + popt1[2]**2)) / (1.6e-19 * 1e4)
     
-    return gain
+    return gain#, d_gain
     
     #return 0
 
@@ -232,11 +233,11 @@ if __name__ == '__main__':
         areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
     
     make_scatterplot(all_delay, all_amplitude)
-    g = gain(areas)
+    g, dg = gain(areas)
     ct = cross_talk(all_amplitude, 150)
     r = after_pulse(all_delay)
 
-    print('Gain: {}'.format(g))
+    print('Gain: {}'.format(g)
     print("Cross talk probability: {}".format(ct))
     print("After pulse probability: {}".format(r))
 

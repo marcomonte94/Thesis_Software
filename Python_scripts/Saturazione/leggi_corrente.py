@@ -24,10 +24,11 @@ k.write_gpib_command('CURR:RANG 2e-7')
 k.write_gpib_command('SOUR:VOLT:ILIM 2.5e-3')
 k.write_gpib_command('SOUR:VOLT:STAT OFF')
 
-i = np.zeros(5)
+i = np.zeros(20)
 
 for j in range(len(i)):
     print(float(k.send_gpib_command('READ?').split("A")[0]))
     i[j] = float(k.send_gpib_command('READ?').split("A")[0])
 print('*********************\n')
 print(i.mean())
+print(i.std())

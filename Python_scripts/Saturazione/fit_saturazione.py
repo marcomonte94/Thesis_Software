@@ -30,27 +30,43 @@ Q = np.array([67.9, 95.5, 109.3, 121.2, 129.4, 139.2, 146.8, 157.2, 169.6, 175.5
 
 photocurrent = np.array([5.73, 9.6, 11.9, 14.4, 16.2, 18.7, 20.8, 24, 28.7, 31.6, 34.3, 37.4, 40.2, 43.2, 47.2, 51.5, 53.8, 57.3, 60.8, 64.3, 68.6, 72.9, 77.3, 82.9, 87]) *1e-9 # Measured photocurrent (reference PD)
 
+dQ = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/prova.txt', usecols=(0), unpack=True)* 1e-9 / R
+
+dp = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Saturazione/prova.txt', usecols=(1), unpack=True)
+
 photocurrent = light_calibration(photocurrent)
 
-dV = (mu / R) * nu * 2000
+dV = Q * nu * 2000
 G = (G / Vov) *( Vov - Q * nu  * 2000)
 
 n_ph = f * photocurrent / (nu * Eph * responsivity)
+dnph = f * dp / (nu * Eph * responsivity)
 n_fired = Q / (e * G)
+dncell = dQ / (e * G)
 
 
 def fitfunc(x, a, b):
-    return a *(1 - np.exp(-b*(x/a)))
+    return a *(1 - np.exp(-b*(x)))
 
-p0 = [5000, 1e-1]
+p0 = [5000, 1e-5]
 
-popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0)#, sigma=dn)
+popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0)#, sigma=dncell)
+a, b = popt[0], popt[1]
+da, db1 = np.sqrt(pcov.diagonal())[0], np.sqrt(pcov.diagonal())[1]
 print(popt)
+
+dy = (a*b * np.exp(-b*n_ph) * dnph) ** 2
+dy += (da * (1 - np.exp(-b*n_ph))) ** 2
+dy += (a*n_ph * np.exp(-b*n_ph) * db1) ** 2
+#dy = np.sqrt(dy)
+
+chi2 = sum(((n_fired - fitfunc(n_ph, *popt)) / np.sqrt(dy))**2.)
+print(chi2 / (len(Q)-2))
 
 plt.figure(figsize=[7., 5.])
 plt.rc('font', size=12)
-plt.plot(n_ph, n_fired, '.', color='black')
-#plt.errorbar(n_ph, n_fired, dn, fmt='.')
+#plt.plot(n_ph, n_fired, '.', color='black')
+plt.errorbar(n_ph, n_fired, dncell, dnph, fmt='.', capsize=2, elinewidth=0.5, color='black')
 _x = np.linspace(0, max(n_ph), 100000)
 plt.plot(_x, fitfunc(_x, *popt), color='red')
 plt.xlabel('$N_{photon}$')

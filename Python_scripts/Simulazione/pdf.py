@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-dcr = 3e4
-n = np.random.poisson(dcr, size=100)
+dcr = 3e6
+n = np.random.poisson(dcr* 5e-7, size=100)
 plt.figure()
 plt.hist(n, bins=100)
 

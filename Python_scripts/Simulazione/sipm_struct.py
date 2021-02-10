@@ -2,15 +2,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
-dt = np.dtype([('x_coord', np.int), ('y_coord', np.int), ('time', np.float64)])
+dt = np.dtype([('x_coord', np.int), ('y_coord', np.int), ('time', np.float64), ('type', np.unicode_, 16)])
 all_time = np.arange(0, 500, 0.001)
 
 
 class Microcell:
 
-    def __init__(self, gain=1, overvoltage=1, t_df=20, t_ds=20, t_rise=3.5):
+    def __init__(self, gain=1, overvoltage=1, pde=0.2, t_df=20, t_ds=20, t_rise=3.5):
         self.gain = gain # expressed as unit of overvoltage
         self.overvoltage = overvoltage
+        self.pde = pde
         self.t_df = t_df
         self.t_ds = t_ds
         self.t_rise = t_rise
@@ -26,6 +27,12 @@ class Microcell:
     def eval_gain(self, ev):
         return self.gain * self.eval_overvoltage(ev)
 
+    def eval_pde(self, ev):
+        if ev['type'] != 'P':
+            return True
+        else:
+             return np.random.uniform() < self.pde * self.eval_overvoltage(ev)
+
     def generate_signal(self, t0, t):
         a1, a2 = 7e-2, 3.2e-2
         signal = (a1*np.exp(-(t-t0)/self.t_ds) + a2*np.exp(-(t-t0)/self.t_df) - (a1+a2)*np.exp(-(t-t0)/self.t_rise))
@@ -37,11 +44,10 @@ class SiPM:
     ''' Class describing a SiPM'''
     def __init__(self, ncell, pde, dark_count_rate, p_ct, p_af):
         self.ncell = ncell
-        self.pde = pde
         self.dark_count_rate = dark_count_rate
         self.p_ct = p_ct
         self.p_af = p_af
-        self.cellmap = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))),Microcell())
+        self.cellmap = np.full((int(np.sqrt(self.ncell)), int(np.sqrt(self.ncell))), Microcell())
         self.triggers_in = np.empty([0,3], dtype=dt)
         self.triggers_out = np.empty([0,2], float)
         self.signal_ampl = np.zeros(len(all_time))
@@ -54,12 +60,7 @@ class SiPM:
         for i in range(int(np.sqrt(self.ncell))):
             for j in range(int(np.sqrt(self.ncell))):
                 self.cellmap[i,j] = Microcell()
-        
 
-
-    def detected_photons(self, all_photon):
-        mask = np.random.uniform(size=len(all_photon)) > self.pde
-        return all_photon[mask]
 
 
     def map_photons(self, photonList):
@@ -71,6 +72,7 @@ class SiPM:
         self.triggers_in['x_coord'] = x
         self.triggers_in['y_coord'] = y
         self.triggers_in['time'] = photonList
+        self.triggers_in[:]['type'] = 'P'
 
     def add_darkcount(self, t0, t1):
         ''' t1 - t0 = time range of the simulation '''      
@@ -84,6 +86,8 @@ class SiPM:
         dark_events['x_coord'] = x
         dark_events['y_coord'] = y
         dark_events['time'] = timestamps
+        dark_events[:]['type'] = 'dark'
+
         self.triggers_in = np.append(self.triggers_in, dark_events)
         #print(len(dark_events))
 
@@ -97,20 +101,20 @@ class SiPM:
         for i in step:
             
             if i == 0 and ev[0] > 0: 
-                print(f'Crosstalk sx: {np.array((ev[0]-1, ev[1], ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]-1, ev[1], ev[2]), dt))
+                #print(f'Crosstalk sx: {np.array((ev[0]-1, ev[1], ev[2]), dt)}')
+                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]-1, ev[1], ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 1 and ev[0] < (int(np.sqrt(self.ncell)) - 1): 
-                print(f'Crosstalk dx: {np.array((ev[0]+1, ev[1], ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]+1, ev[1], ev[2]), dt))
+                #print(f'Crosstalk dx: {np.array((ev[0]+1, ev[1], ev[2]), dt)}')
+                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]+1, ev[1], ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 2 and ev[1] > 0:
-                print(f'Crosstalk up: {np.array((ev[0], ev[1]-1, ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]-1, ev[2]), dt))
+                #print(f'Crosstalk up: {np.array((ev[0], ev[1]-1, ev[2]), dt)}')
+                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]-1, ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 3 and ev[1] < (int(np.sqrt(self.ncell)) - 1): 
-                print(f'Crosstalk down: {np.array((ev[0], ev[1]+1, ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]+1, ev[2]), dt))
+                #print(f'Crosstalk down: {np.array((ev[0], ev[1]+1, ev[2]), dt)}')
+                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]+1, ev[2], 'ct'), dt))
                 self.ct_counts += 1
 
 
@@ -119,32 +123,35 @@ class SiPM:
         if np.random.uniform() < self.p_af:
             self.af_counts +=1
             taf = np.random.exponential(self.cellmap[ev[0], ev[1]].tau_af)
-            print(f'Af: {np.array((ev[0], ev[1], ev[2]+taf), dt)}')
-            self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1], ev[2]+taf), dt))
+            #print(f'Af: {np.array((ev[0], ev[1], ev[2]+taf), dt)}')
+            self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1], ev[2]+taf, 'af'), dt))
 
 
     def process_photon(self, ev):
 
         self.triggers_in = self.triggers_in[self.triggers_in!=ev]
-        self.det_counts += 1
-        g = self.cellmap[ev[0], ev[1]].eval_gain(ev)
-        self.add_crosstalk(ev)
-        self.add_afterpulse(ev)
-        self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
-        self.cellmap[ev[0], ev[1]].last_trigger_time = ev[2]
-        self.signal_ampl += self.cellmap[ev[0], ev[1]].generate_signal(ev[2], all_time)
+        if self.cellmap[ev[0], ev[1]].eval_pde(ev):
+            self.det_counts += 1
+            g = self.cellmap[ev[0], ev[1]].eval_gain(ev)
+            self.add_crosstalk(ev)
+            self.add_afterpulse(ev)
+            self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
+            self.cellmap[ev[0], ev[1]].last_trigger_time = ev[2]
+            self.signal_ampl += self.cellmap[ev[0], ev[1]].generate_signal(ev[2], all_time)
         sipm.triggers_in = np.sort(self.triggers_in, order='time' )
         
 
 
 if __name__ == '__main__':
-    sipm = SiPM(57600, 0.2, 0.5, 0.05, 0.05)
+
+    ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.2, 3e6, 0.04, 0.12
+    sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
     sipm.initialize_sipm()
     photon_timestamps = np.arange(1, 20, 0.5)
-    
+    print(f'Starting photons: {len(photon_timestamps)}')    
     
     sipm.map_photons(photon_timestamps)
-    sipm.add_darkcount(photon_timestamps[0], photon_timestamps[-1])
+    sipm.add_darkcount(all_time[0], all_time[-1])
     i = 0
 
     while len(sipm.triggers_in) > 0:
@@ -153,8 +160,8 @@ if __name__ == '__main__':
 
     print(f'***************** \n {sipm.triggers_in}')
     print(sipm.triggers_out)
-    print(f'Number of total events: {len(sipm.triggers_out)}')
-    print(f'Number of detected photons: {len(photon_timestamps)}')
+    print(f'Number of total triggers: {len(sipm.triggers_out)}')
+    #print(f'Number of detected photons: {len(sipm.triggers_in[sipm.triggers_in['type']=='P'])}'')
     print(f'Number of crosstalk: {sipm.ct_counts}')
     print(f'Number of afterpulse: {sipm.af_counts}')
 
