@@ -196,7 +196,7 @@ def channelMap(a):
     }
 
     #a_selected = a[a['id_board']<=159]
-    
+
     keys = a['id_board']*100 + a['channel']
     mapped_events = np.zeros(len(a),dtype=dt3)
 
@@ -213,6 +213,7 @@ def channelMap(a):
 
     mapped_events['time'] = a['time']
     mapped_events['ampl'] = a['ampl']
+    mapped_events['id_event'] = a['id_event']
     mapped_events['side'] = a['channel']%2
 
     return mapped_events

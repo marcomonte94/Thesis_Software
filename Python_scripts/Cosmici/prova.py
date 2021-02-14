@@ -12,13 +12,40 @@ dt = np.dtype([
     ('time',            np.float, (1024, ))
   ])
 
-path = 'C:/Users/Marco/Desktop/cosmic/prova.dec'
+path = 'C:/Users/Marco/Desktop/cosmic/prova20.dec'
 a = np.fromfile(path, dtype=dt)
 e = channelMap(a)
-mask = np.logical_and(e['id_bar']==0, e['layer']==0)
-print(len(e[mask]))
 
+bar1, bar2 = 11, 14
+l1, l2 = 0, 1
 
+n_id = 500
+#e =k [k['id_event'] == n_id]
+
+print(e['id_bar'])
+print(e['layer'])
+print(e['side'])
+
+print(len(e))
+sullaBarra1 = e['id_bar'] == bar1
+sulFront = e['layer'] == 0
+sullaBarra2 = e['id_bar'] == bar2
+sulRear = e['layer'] == 1
+
+mask1 = np.logical_and(sullaBarra1, sulFront)
+mask2 = np.logical_and(sullaBarra2, sulRear)
+
+e0 = e[mask1]
+e1 = e[mask2]
+
+print((e0['id_event']))
+print(e1['id_event'])
+
+mask3 = e0['id_event'] == e1['id_event']
+
+#ee = e[np.logical_and(mask1, mask2)]
+
+print(len(ee))
 
 
 
