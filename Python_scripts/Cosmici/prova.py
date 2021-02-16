@@ -12,7 +12,7 @@ dt = np.dtype([
     ('time',            np.float, (1024, ))
   ])
 
-path = 'C:/Users/Marco/Desktop/cosmic/prova20.dec'
+path = 'C:/Users/Marco/Desktop/cosmic/prova.dec'
 a = np.fromfile(path, dtype=dt)
 e = channelMap(a)
 
@@ -41,11 +41,18 @@ e1 = e[mask2]
 print((e0['id_event']))
 print(e1['id_event'])
 
-mask3 = e0['id_event'] == e1['id_event']
 
-#ee = e[np.logical_and(mask1, mask2)]
+ee = np.intersect1d(e0['id_event'], e1['id_event'])
 
-print(len(ee))
+for i in ee:
+    print(f'OOOOOOh {i}')
+    k = e0[e0['id_event']==i]
+    kd, ks = k[k['side']==1], k[k['side']==0]
+    plt.plot(kd['ampl'][0])
+    plt.plot(ks['ampl'][0])
+    plt.plot(kd['clk'][0])
+    plt.show()
+
 
 
 

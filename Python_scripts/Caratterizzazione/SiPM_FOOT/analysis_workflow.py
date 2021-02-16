@@ -195,14 +195,14 @@ def after_pulse(all_delay):
     plt.rc('font', size=12)
     ydata, _, _ = plt.hist(all_delay, bins=bins_log, color='blue', label='Occurrences')
     plt.ylabel('Counts')
-    plt.xlabel('Time distance [$s$]')
+    plt.xlabel('Time distance [$\mu s$]')
 
     _x = 0.5 * (bins_log[1:] + bins_log[:-1])
     _y = -popt[1]*popt[0]*(np.exp(-bins_log[1:]/popt[1]) - np.exp(-bins_log[:-1]/popt[1]))
     #print(len(y_data[y_data > _y]))
     plt.plot(_x, _y, color='red', label='Exponential fit')
     
-    yaf = ydata[_x < 2e-1] - _y[_x < 2e-1]
+    yaf = ydata[_x < 1e-1] - _y[_x < 1e-1]
     yaf = yaf[yaf > 0]
     n_event = sum(ydata)
     
@@ -233,11 +233,11 @@ if __name__ == '__main__':
         areas, all_amplitude, all_delay = wf_data(path, res_path, 40, 0.016)
     
     make_scatterplot(all_delay, all_amplitude)
-    g, dg = gain(areas)
+    g = gain(areas)
     ct = cross_talk(all_amplitude, 150)
     r = after_pulse(all_delay)
 
-    print('Gain: {}'.format(g)
+    print('Gain: {}'.format(g))
     print("Cross talk probability: {}".format(ct))
     print("After pulse probability: {}".format(r))
 

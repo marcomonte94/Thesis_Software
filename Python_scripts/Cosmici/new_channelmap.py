@@ -4,7 +4,7 @@ import numpy as np
 Key code: id_board * 100 + channel
 '''
 
-def channelMap(a):
+def channelMap(events):
 
     dt3 = np.dtype([
         ('id_bar',          np.int),
@@ -12,6 +12,7 @@ def channelMap(a):
         ('side',            np.int),
         ('id_event',        np.int),
         ('ampl',            np.float,  (1024,)),
+        #('clk',             np.float,  (1024,)),
         ('time',            np.float,  (1024,))
         ])
 
@@ -195,7 +196,29 @@ def channelMap(a):
 
     }
 
+    dizionario_clk = {
+        0: 16,
+        1: 16,
+        2: 16,
+        3: 16,
+        4: 16,
+        5: 16,
+        6: 16,
+        7: 16,
+        8: 17,
+        9: 17,
+        10: 17,
+        11: 17,
+        12: 17,
+        13: 17,
+        14: 17,
+        15: 17
+    }
+
     #a_selected = a[a['id_board']<=159]
+
+    clk = events[events[events['channel'] > 15]]
+    a = events[events[events['channel'] < 16]]
 
     keys = a['id_board']*100 + a['channel']
     mapped_events = np.zeros(len(a),dtype=dt3)
@@ -204,17 +227,19 @@ def channelMap(a):
 
     xx = pd.Series(keys).replace(dizionario_barre)
     mapped_events['id_bar'] = xx
-    #print(xx)
 
     xx = pd.Series(keys).replace(dizionario_layer)
     mapped_events['layer'] = xx
     #print(mapped_events['layer'])
+    xx = pd.Series(keys).replace(dizionario_clk)
+    print(xx)
 
+    #mapped_events['clk'] = a[a['channel']==xx]['ampl']
 
     mapped_events['time'] = a['time']
     mapped_events['ampl'] = a['ampl']
     mapped_events['id_event'] = a['id_event']
-    mapped_events['side'] = a['channel']%2
+    mapped_events['side'] = a['channel'] % 2
 
     return mapped_events
 
@@ -234,3 +259,5 @@ if __name__ == '__main__':
     a = np.fromfile(path, dtype=dt)
     e = channelMap(a)
     print(e[0]['id_bar'])
+    plt.plot(e[0]['clk'])
+    plt.show()
