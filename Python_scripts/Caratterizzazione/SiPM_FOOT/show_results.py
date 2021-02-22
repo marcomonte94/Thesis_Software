@@ -9,8 +9,11 @@ from analysis_workflow import gain, cross_talk, after_pulse
 def compute_results(voltage, datapath):
     #g, ct, af = [], [], []
     voltage_dir = list(os.listdir(f'{datapath}'))
+    #p = [80, 80, 80, 80, 80, 80, 80, 280, 280] # id 31
+    #p = [80, 80, 80, 80, 80, 80, 80, 80, 80] # id 11, id 2
+    p = [80, 80, 80, 280, 280, 280, 280, 280, 280] # id 31
 
-    with open(f'{datapath}/dcr.txt', 'w') as fileresults:
+    with open(f'{datapath}/risultati.txt', 'w') as fileresults:
 
         fileresults.write('#Dark-count-rate  Gain   Cross-talk  After-pulse \n')
 
@@ -22,26 +25,27 @@ def compute_results(voltage, datapath):
                 areas =np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_areas.txt', unpack=True)
                 ampl = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_ampl.txt', unpack=True)
                 delay = np.loadtxt(f'{datapath}/{voltage_dir[i]}/all_delay.txt', unpack=True)
-                dcr = np.loadtxt(f'{datapath}/{voltage_dir[i]}/dark_count_rate.txt', unpack=True)
 
-                fileresults.write(f'{dcr}   ')
-                '''
-                fileresults.write(f'{gain(areas)}   ')
+                #fileresults.write(f'{dcr}   ')
+                x, dx = gain(areas)
+                fileresults.write(f'{x}   {dx}  ')
                 plt.close()
-                fileresults.write(f'{cross_talk(ampl)}  ')
+                x, dx = cross_talk(ampl, p[i])
+                fileresults.write(f'{x}   {dx}   ')
                 plt.close()
-                fileresults.write(f'{after_pulse(delay)}  ')
+                x, dx, y, dy = after_pulse(delay)
+                fileresults.write(f'{x}     {dx}    {y}     {dy}  ')
                 plt.close()
-                '''
+                
                 fileresults.write('\n')
 
 
-def plot_results(voltage, dcr, g, ct, af):
+def plot_results(voltage, g, dg, ct, d_ct, dcr, d_dcr, af, d_af):
 
     def fitfunc(x, a, b):
         return a + b * x
 
-    popt, pcov = curve_fit(fitfunc, voltage, g)
+    popt, pcov = curve_fit(fitfunc, voltage, g, sigma=dg)
 
     Vbr = -popt[0] / popt[1]
     d = np.matrix([-1/popt[1], -Vbr/popt[1]])
@@ -52,31 +56,32 @@ def plot_results(voltage, dcr, g, ct, af):
 
     plt.figure(figsize=[8, 5])
     plt.rc('font', size=12)
-    plt.plot((voltage), g/1e5, '.', color='black')
-    plt.plot((voltage), fitfunc(voltage, *popt)/1e5, color='red')
+    plt.errorbar((voltage), g, dg, fmt='.', color='black')
+    plt.plot((voltage), fitfunc(voltage, *popt), color='red')
     plt.xlabel('Voltage [V]')
     plt.ylabel('Gain $[10^5]$')
 
     plt.figure(figsize=[8, 5])
     plt.rc('font', size=12)
     plt.plot((voltage-Vbr)/2, ct*100, color='blue')
-    plt.plot((voltage-Vbr)/2, ct*100, '.', color='black')   
+    plt.errorbar((voltage-Vbr)/2,ct*100, d_ct*100, fmt='.', color='black')   
     plt.ylabel('$P_{cross-pulse} [\%]$')
     plt.xlabel('Overvoltage [V]') 
 
     plt.figure(figsize=[8, 5])
     plt.rc('font', size=12)
     plt.plot((voltage-Vbr)/2, af*100, color='blue')
-    plt.plot((voltage-Vbr)/2, af*100, '.', color='black')
+    plt.errorbar((voltage-Vbr)/2, af*100, d_af*100, fmt= '.', color='black')
     plt.ylabel('$P_{after-pulse} [\%]$')
     plt.xlabel('Overvoltage [V]')
 
     plt.figure(figsize=[8, 5])
     plt.rc('font', size=12)
-    plt.plot((voltage-Vbr)/2, dcr/1e6, color='blue')
-    plt.plot((voltage-Vbr)/2, dcr/1e6, '.', color='black')
+    plt.plot((voltage-Vbr)/2, dcr, color='blue')
+    plt.errorbar((voltage-Vbr)/2, dcr, d_dcr , fmt='.', color='black')
     plt.ylabel('Dark count rate [MHz]')
     plt.xlabel('Overvoltage [V]')
+    #plt.yscale('log')
     
     plt.show()
     
@@ -97,9 +102,9 @@ if __name__ == '__main__':
 
 
     if args.write == '0':
-        dcr, g, ct, af = np.loadtxt(f'{datapath}/results.txt', unpack=True)
-        dcr = dcr - af*dcr
-        plot_results(voltage, dcr, g, ct, af)
+        g, dg, ct, d_ct, dcr, d_dcr, af, d_af = np.loadtxt(f'{datapath}/risultati.txt', unpack=True)
+        #dcr = dcr - af*dcr
+        plot_results(voltage, g, dg, ct, d_ct, dcr, d_dcr, af, d_af)
 
     elif args.write == '1':
         compute_results(voltage, datapath)

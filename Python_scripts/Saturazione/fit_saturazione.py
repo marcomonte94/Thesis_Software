@@ -44,11 +44,20 @@ dnph = f * dp / (nu * Eph * responsivity)
 n_fired = Q / (e * G)
 dncell = dQ / (e * G)
 
+plt.figure(figsize=[7., 5.])
+plt.rc('font', size=12)
+plt.plot(dV, G/1e5, color='blue')
+plt.plot(dV, G/1e5, '.', color='black')
+plt.xlabel('$\Delta V$ [V]')
+plt.ylabel('SiPM gain [$10^5$]')
+
+
 
 def fitfunc(x, a, b):
-    return a *(1 - np.exp(-b*(x)))
+    #return a *(1 - np.exp(-b*(x)))
+    return a * (1 - np.exp(-x*b/a))
 
-p0 = [5000, 1e-5]
+p0 = [5000, 1e-1]
 
 popt, pcov = curve_fit(fitfunc, n_ph, n_fired, p0)#, sigma=dncell)
 a, b = popt[0], popt[1]

@@ -2,7 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
-dt = np.dtype([('x_coord', np.int), ('y_coord', np.int), ('time', np.float64), ('type', np.unicode_, 16)])
+dt = np.dtype([
+    ('x_coord',     np.int), 
+    ('y_coord',     np.int), 
+    ('time',        np.float64),
+    ('type',        np.unicode_, 16)
+     ])
 all_time = np.arange(0, 500, 0.001)
 
 
@@ -138,7 +143,7 @@ class SiPM:
             self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
             self.cellmap[ev[0], ev[1]].last_trigger_time = ev[2]
             self.signal_ampl += self.cellmap[ev[0], ev[1]].generate_signal(ev[2], all_time)
-        sipm.triggers_in = np.sort(self.triggers_in, order='time' )
+        self.triggers_in = np.sort(self.triggers_in, order='time' )
         
 
 
@@ -147,11 +152,17 @@ if __name__ == '__main__':
     ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.2, 3e6, 0.04, 0.12
     sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
     sipm.initialize_sipm()
-    photon_timestamps = np.arange(1, 20, 0.5)
+
+    f = 'C:/Users/Marco/Desktop/results_C115_100ev/detect2.raw'
+
+    data = np.fromfile(f, dtype=np.float32, sep="")
+    data = np.reshape(data, (int(len(data)/4), 4))
+    photon_timestamps = data[data[:,0]==1][:,1]
     print(f'Starting photons: {len(photon_timestamps)}')    
     
     sipm.map_photons(photon_timestamps)
     sipm.add_darkcount(all_time[0], all_time[-1])
+    sipm.triggers_in = np.sort(sipm.triggers_in, order='time' )
     i = 0
 
     while len(sipm.triggers_in) > 0:
