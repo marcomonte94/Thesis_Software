@@ -64,4 +64,5 @@ if __name__ == '__main__':
         np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/Segnali_2/wf_{i}.txt', a)
         plt.figure()
         plt.plot(sipm.all_time, a)
+        plt.show()
     
