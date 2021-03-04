@@ -12,8 +12,8 @@ def readSimBinary(fileName):
 def toCells(data):
     data['y'] += 1.5
     data['x'] += 10
-    data['x'] = np.floor(data['x'] / 25e-3).astype(int)
-    data['y'] = np.floor(data['y'] / 25e-3).astype(int)
+    data['x'] = np.floor(data['x'] / 25e-3).astype(int)-1
+    data['y'] = np.floor(data['y'] / 25e-3).astype(int)-1
     return data
 
 def deleteMissingEvents(data):
@@ -31,37 +31,50 @@ def deleteMissingEvents(data):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='SiPM simulation')
+    parser.add_argument('f', help='Input data')
+    parser.add_argument('-l', '--side', help='Bar side (1 -> A, 2 -> B)')
     parser.add_argument('-d', '--debug', help='Debug mode', default = '0')
+    parser.add_argument('-w', '--graphs', help='Graph mode', default = '0')
     args = parser.parse_args()
 
-    data = 'C:/Users/Marco/Desktop/results_C115_100ev/detect1.raw'
+    data = f'C:/Users/Marco/Desktop/{args.f}/detect{args.side}.raw'
+    data = readSimBinary(data)
+    data = toCells(data)
+    data = deleteMissingEvents(data)
 
 
     if args.debug == '0':
 
         ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.2, 3e6, 0.04, 0.12
-        data = readSimBinary(data)
-        data = toCells(data)
-        data = deleteMissingEvents(data)
 
         for j in range(1, 101):
             print(f'Simulazione di evento {j}\n')
             sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
             sipm.initialize_sipm()
             a = run_simulation(sipm, data[data['id_event']==j])
-            np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/Segnali_1/wf_{j}.txt', a)
+            np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/{args.f}/Segnali_{args.side}/wf_{j}.txt', a)
 
     elif args.debug == '1':
+
+        if args.graphs == '1':
+            plt.figure()
+            plt.hist(data['x'], bins=len(data))
+            plt.figure()
+            plt.hist(data['y'], bins=len(data))
+            plt.figure()
+            plt.hist(data['time'], bins=len(data))
+
         i = input('Event to debug: ')
         ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.2, 3e6, 0.04, 0.12
-        data = readSimBinary(data)
-        data = toCells(data)
+        print(len(data[data['id_event']==(int(i))]))
+
         data = deleteMissingEvents(data)        
         print(f'Simulazione di evento {i}\n')
         sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
         sipm.initialize_sipm()
+        print(len(data[data['id_event']==(int(i))]))
         a = run_simulation(sipm, data[data['id_event']==(int(i))])
-        np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/Segnali_2/wf_{i}.txt', a)
+        np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/{args.f}/Segnali_{args.side}/wf_{i}.txt', a)
         plt.figure()
         plt.plot(sipm.all_time, a)
         plt.show()

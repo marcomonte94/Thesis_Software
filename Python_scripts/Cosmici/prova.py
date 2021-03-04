@@ -1,57 +1,69 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from new_channelmap import channelMap
+from scipy.stats import moyal
+from scipy.optimize import curve_fit
 
-dt = np.dtype([
-    ('channel',         np.int),
-    ('id_board',        np.int),
-    ('id_event',        np.int),
-    ('always_0_1',      np.int),
-    ('always_0_2',      np.int),
-    ('ampl',            np.float, (1024, )),
-    ('time',            np.float, (1024, ))
-  ])
+path = 'C:/Users/Marco/Desktop/cosmici'
 
-path = 'C:/Users/Marco/Desktop/cosmic/prova.dec'
-a = np.fromfile(path, dtype=dt)
-e = channelMap(a)
+data = np.fromfile(f'{path}/BAR_ChargeA.bin')
+a = np.reshape(data, (110000, 40))
 
-bar1, bar2 = 11, 14
-l1, l2 = 0, 1
+data = np.fromfile(f'{path}/BAR_ChargeB.bin')
+b = np.reshape(data, (110000, 40))
 
-n_id = 500
-#e =k [k['id_event'] == n_id]
-
-print(e['id_bar'])
-print(e['layer'])
-print(e['side'])
-
-print(len(e))
-sullaBarra1 = e['id_bar'] == bar1
-sulFront = e['layer'] == 0
-sullaBarra2 = e['id_bar'] == bar2
-sulRear = e['layer'] == 1
-
-mask1 = np.logical_and(sullaBarra1, sulFront)
-mask2 = np.logical_and(sullaBarra2, sulRear)
-
-e0 = e[mask1]
-e1 = e[mask2]
-
-print((e0['id_event']))
-print(e1['id_event'])
+myBar = 10
 
 
-ee = np.intersect1d(e0['id_event'], e1['id_event'])
+evA_Su_BARmyBar = np.where(a[:,myBar]>0)[0]
+evB_Su_BARmyBar = np.where(b[:,myBar]>0)[0]
 
-for i in ee:
-    print(f'OOOOOOh {i}')
-    k = e0[e0['id_event']==i]
-    kd, ks = k[k['side']==1], k[k['side']==0]
-    plt.plot(kd['ampl'][0])
-    plt.plot(ks['ampl'][0])
-    plt.plot(kd['clk'][0])
-    plt.show()
+q, dq = [], []
+
+for otherBar in range(20, 40):
+
+    ev_GOOD_Su_BARmyBar = np.intersect1d(evA_Su_BARmyBar, evB_Su_BARmyBar)
+
+    evA_Su_BARotherBar = np.where(a[:,otherBar]>0)[0]
+    evB_Su_BARotherBar = np.where(b[:,otherBar]>0)[0]
+
+    ev_GOOD_Su_BARotherBar = np.intersect1d(evA_Su_BARotherBar, evB_Su_BARotherBar)
+
+    ev_GOOD = np.intersect1d(ev_GOOD_Su_BARotherBar, ev_GOOD_Su_BARmyBar)
+
+    y, edges, _ = plt.hist(a[ev_GOOD, myBar], bins=50)
+    plt.close()
+    x = 0.5 * (edges[1:] + edges[:-1])
+    #plt.hist(b[ev_GOOD, myBar], bins=50)
+
+    def fitfunc(x, a, mu, sigma):
+        return a * moyal.pdf(x, mu, sigma)
+
+    p0 = [40, 2, 0.3]
+    popt, pcov = curve_fit(fitfunc, x, y, p0=p0, sigma=None)
+    q.append(popt[1])
+    dq.append(np.sqrt(pcov.diagonal()[1]))
+
+'''
+print(f'Media A: {a[ev_GOOD, myBar].mean()}')
+_x = np.linspace(0, max(x), 1000)
+plt.plot(_x, fitfunc(_x, *popt))
+print(f'Media B: {b[ev_GOOD, myBar].mean()}')
+'''
+q, dq = np.array(q), np.array(dq)
+x = np.arange(0,len(q))
+def fitfunc(x, a, l, c):
+    return a * np.exp(-x/l) + c
+
+p0 = [40, 20, 0.3]
+popt, pcov = curve_fit(fitfunc, x, q, p0=p0, sigma=None)
+print(popt)
+plt.errorbar(x,q, dq, fmt='.')
+plt.plot(x, fitfunc(x, *popt))
+
+plt.show()
+
+
+
 
 
 

@@ -47,9 +47,10 @@ class Microcell:
         t0 = ev['time']
         a1, a2 = 7.1e-6, 3.16e-6
         signal = (a1*np.exp(-(t-t0)/self.t_ds) + a2*np.exp(-(t-t0)/self.t_df) - (a1+a2)*np.exp(-(t-t0)/self.t_rise))
+        #signal = (1.6e-19 * 50 * 5.5e5 / 2e-8) * np.exp(-(t-t0)/20)
         signal *= np.heaviside(t-t0, 0) 
         #print(f'OH {self.eval_gain(ev)} {max(signal)}')
-        return self.eval_gain(ev) * signal
+        return self.eval_gain(ev) * signal*41.5
 
     
 class SiPM: 
@@ -59,7 +60,7 @@ class SiPM:
         self.dark_count_rate = dark_count_rate
         self.p_ct = p_ct
         self.p_af = p_af
-        self.cellmap = np.full((800, 480), Microcell())
+        self.cellmap = np.full((800, 500), Microcell())
         self.triggers_in = np.empty([0,3], dtype=dt)
         self.triggers_out = np.empty([0,2], float)
         self.all_time = np.arange(0, 500, 0.001)
@@ -70,9 +71,9 @@ class SiPM:
 
     def initialize_sipm(self):
         
-        for i in range(int(np.sqrt(self.ncell))):
-            for j in range(int(np.sqrt(self.ncell))):
-                self.cellmap[i,j] = Microcell()
+        for i in range(0, 800):
+            for j in range(0, 120):
+                self.cellmap[i][j] = Microcell()
 
 
 
@@ -145,7 +146,9 @@ class SiPM:
 
         self.triggers_in = self.triggers_in[self.triggers_in!=ev]
         #print(ev)
+        #print(self.cellmap[ev[0], ev[1]].eval_pde(ev))
         if self.cellmap[ev[0], ev[1]].eval_pde(ev):
+        #if np.random.random() < 0.2:
             self.det_counts += 1
             g = self.cellmap[ev[0], ev[1]].eval_gain(ev)
             self.signal_ampl += self.cellmap[ev[0], ev[1]].generate_signal(ev, self.all_time)
@@ -176,7 +179,7 @@ def run_simulation(sipm, data):
     ##print(f'Number of detected photons: {len(sipm.triggers_in[sipm.triggers_in['type']=='P'])}'')
     #print(f'Number of crosstalk: {sipm.ct_counts}')
     #print(f'Number of afterpulse: {sipm.af_counts}')
-
+    print(sipm.det_counts)
     return sipm.signal_ampl
 
 

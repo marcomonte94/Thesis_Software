@@ -64,6 +64,8 @@ print(f'tds: {popt[3]}')
 print(f'tdf: {popt[4]}')
 print(f'tr: {popt[5]}')
 
+print('\n')
+print(f'Area curva: {sum(a*(tfit[1]-tfit[0]))}')
 
 plt.figure()
 

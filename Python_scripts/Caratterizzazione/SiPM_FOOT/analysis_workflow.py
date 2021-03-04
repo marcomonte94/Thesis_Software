@@ -66,18 +66,9 @@ def wf_data(wf_path, res_path, n_wf, threshold):
     for i in range(len(all_amplitude)):
         fampl.write(f'{all_amplitude[i]} \n')
         fdelay.write(f'{all_delay[i]} \n')
-        
-    
+           
     fdelay.close()
     fampl.close()
-
-    dt = n_wf*0.002
-    fdcr = open(f'{res_path}/dark_count_rate.txt', 'w')
-    fdcr.write(f'{len(all_amplitude)/dt}')
-    fdcr.close()
-
-
-    #fdcr.write(f'{dark_count_rate(all_amplitude, time, n_wf)}')
 
     return areas, all_amplitude, all_delay
 
