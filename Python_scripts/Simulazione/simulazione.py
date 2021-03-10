@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--graphs', help='Graph mode', default = '0')
     args = parser.parse_args()
 
-    data = f'C:/Users/Marco/Desktop/{args.f}/detect{args.side}.raw'
+    data = f'C:/Users/Marco/Desktop/Dati_MC/{args.f}/detect{args.side}.raw'
     data = readSimBinary(data)
     data = toCells(data)
     data = deleteMissingEvents(data)
@@ -51,8 +51,12 @@ if __name__ == '__main__':
             print(f'Simulazione di evento {j}\n')
             sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
             sipm.initialize_sipm()
+            k = j+40
+                        
+            print(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/{args.f}/Segnali_{args.side}/wf_{k}.txt')
+
             a = run_simulation(sipm, data[data['id_event']==j])
-            np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/{args.f}/Segnali_{args.side}/wf_{j}.txt', a)
+            np.savetxt(f'C:/Users/Marco/Desktop/Analisi_SiPM/Simulazione/{args.f}/Segnali_{args.side}/wf_{k}.txt', a)
 
     elif args.debug == '1':
 

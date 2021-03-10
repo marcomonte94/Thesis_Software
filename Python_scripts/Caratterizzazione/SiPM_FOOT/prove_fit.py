@@ -6,7 +6,7 @@ datapath = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id31/risultat
 g, dg, ct, d_ct, dcr, d_dcr, af, d_af = np.loadtxt(datapath, unpack=True)
 v = np.arange(116, 125)
 #v = np.arange(120, 129)
-
+plt.style.use('thesis')
 def line(x, a, b):
     return a + b*x
 
@@ -36,15 +36,15 @@ plt.xlabel('v [V]')
 plt.ylabel('Gain $[10^5]$')
 
 ## CROSSTALK
-
 '''
-def f(x, a):
-    return a* (x**2)
+def f(x, a, b):
+    return a* (x**2) + b
 '''
 def f(x, a, b):
     return a *(x) * (1- np.exp(-b*(x)))
 
-xfit, yfit, dy = (v-Vbr)/2, ct, d_ct
+
+xfit, yfit, dy = (v-Vbr)/2, ct*100, d_ct*100
 p0 = [1,1]
 
 popt, pcov = curve_fit(f, xfit, yfit, p0=p0, sigma=dy)
@@ -82,16 +82,16 @@ plt.xlabel('Overvoltage [V]')
 
 ## AFTERPULSE
 
-'''
 def f(x, a, b):
-    return a *(x**2)
+    return a + b*(x**2)
 
 '''
 
 def f(x, a, b):
     return a *(x**2) * (1- np.exp(-b*(x)))
+'''
 
-xfit, yfit, dy = (v-Vbr)/2, af, d_af
+xfit, yfit, dy = (v-Vbr)/2, af*100, d_af*100
 p0 = [0.03, 0.01]
 popt, pcov = curve_fit(f, xfit, yfit, p0=p0, sigma=dy)
 print(popt)

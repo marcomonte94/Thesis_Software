@@ -6,6 +6,8 @@ from scipy.signal import find_peaks
 from readTrc import Trc
 from wf_analysis import DLED, wf_correction
 
+plt.style.use('thesis')
+
 def compute_area(ampl, picco, dt):
 
     baseline = ampl[picco-200:picco-100].mean()
@@ -41,7 +43,7 @@ for i in range(5, len(peaks)-5):
         if compute_area(ampl, peaks[i], time[1]-time[0]) < 2e-9:
             a = np.vstack((a, ampl[peaks[i]-200 : peaks[i]+900]))
 
-a = np.mean(a, axis=0) / 1e4
+a = np.mean(a, axis=0)
 
 def fitfunc(t, a1, a2, tf, ts):
     #return np.heaviside(t-t0, 0) * np.exp(-(t-t0)/t_recovery)
@@ -49,13 +51,13 @@ def fitfunc(t, a1, a2, tf, ts):
 
 def f(t, t0, a1, a2, t_ds, t_df, t_r):
     return np.heaviside(t-t0, 0) * (a1*np.exp(-(t-t0)/t_ds) + a2*np.exp(-(t-t0)/t_df) - (a1+a2)*np.exp(-(t-t0)/t_r))
-    
+
 
 #tfit = np.arange(300, 800)*1e-10
 tfit = np.arange(len(a))*1e-10
 
 #p0 = [1e-2, 1e-2, 5e-9, 30e-9]
-p0 = [1e-8, 1e-5, 1e-5, 2e-8, 1e-9, 1e-10]
+p0 = [1e-8, 1e-2, 1e-2, 2e-8, 1e-9, 1e-10]
 popt, pcov = curve_fit(f, tfit, a, p0=p0)
 print(f't0: {popt[0]}')
 print(f'a1: {popt[1]}')
@@ -67,11 +69,13 @@ print(f'tr: {popt[5]}')
 print('\n')
 print(f'Area curva: {sum(a*(tfit[1]-tfit[0]))}')
 
-plt.figure()
-
-plt.plot(tfit, a)
-plt.plot(tfit, f(tfit, *popt))
-
+plt.figure(figsize=[7., 5.])
+plt.rc('font', size=12)
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude [V]')
+plt.plot(tfit, a, '.', color='black', label='Experimental points')
+plt.plot(tfit, f(tfit, *popt), color='red', label='Fitted waveform')
+plt.legend(loc='best')
 #print('Single cell area:    {}.'format())
 
 plt.show()

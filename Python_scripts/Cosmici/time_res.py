@@ -34,8 +34,8 @@ def time_resolution(dt_AB, myBar):
         popt, pcov = curve_fit(gaus, xdata, ydata, p0)
         _x = np.linspace(-10, 10, 1000)
         plt.plot(_x, gaus(_x, *popt), color='red')
-        plt.show()
-        #plt.close()
+        #plt.show()
+        plt.close()
 
         mu = np.append(mu, popt[1])
         sigma =  np.append(sigma, popt[2])
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     data = np.fromfile(f'{path}/BAR_DeltaT_AB.bin')
     t = np.reshape(data, (110000, 40))
 
-    m, s = time_resolution(t, 9)
+    m, s = time_resolution(t, 30)
     plt.figure()
     plt.plot(m ,'o')
     plt.figure()

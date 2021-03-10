@@ -25,7 +25,7 @@ class Microcell:
         self.t_df = t_df
         self.t_ds = t_ds
         self.t_rise = t_rise
-        self.tau_af = 100
+        self.tau_af = 14.5
         self.last_trigger_time = np.nan
 
     def eval_overvoltage(self, ev):
