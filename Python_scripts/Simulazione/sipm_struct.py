@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
+np.random.seed(0)
+
 dt = np.dtype([
     ('x_coord',     int), 
     ('y_coord',     int), 
@@ -57,13 +59,14 @@ class SiPM:
     ''' Class describing a SiPM'''
     def __init__(self, ncell, pde, dark_count_rate, p_ct, p_af):
         self.ncell = ncell
+        self.pde=pde
         self.dark_count_rate = dark_count_rate
         self.p_ct = p_ct
         self.p_af = p_af
         self.cellmap = np.full((800, 500), Microcell())
         self.triggers_in = np.empty([0,3], dtype=dt)
         self.triggers_out = np.empty([0,2], float)
-        self.all_time = np.arange(0, 500, 0.001)
+        self.all_time = np.arange(0, 500, 0.1)
         self.signal_ampl = np.zeros(len(self.all_time))
         self.ct_counts = 0
         self.af_counts = 0
@@ -73,7 +76,7 @@ class SiPM:
         
         for i in range(0, 800):
             for j in range(0, 120):
-                self.cellmap[i][j] = Microcell()
+                self.cellmap[i][j] = Microcell(pde=self.pde)
 
 
 
@@ -117,19 +120,23 @@ class SiPM:
             
             if i == 0 and ev[0] > 0: 
                 #print(f'Crosstalk sx: {np.array((ev[0]-1, ev[1], ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]-1, ev[1], ev[2], 'ct'), dt))
+                #self.triggers_in = np.insert(self.triggers_in, np.array((ev[0]-1, ev[1], ev[2], 'ct'), dt))
+                self.triggers_in = np.insert(self.triggers_in, 0, np.array((ev[0]-1, ev[1], ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 1 and ev[0] < (int(np.sqrt(self.ncell)) - 1): 
                 #print(f'Crosstalk dx: {np.array((ev[0]+1, ev[1], ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0]+1, ev[1], ev[2], 'ct'), dt))
+                #self.triggers_in = np.append(self.triggers_in, np.array((ev[0]+1, ev[1], ev[2], 'ct'), dt))
+                self.triggers_in = np.insert(self.triggers_in, 0, np.array((ev[0]+1, ev[1], ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 2 and ev[1] > 0:
                 #print(f'Crosstalk up: {np.array((ev[0], ev[1]-1, ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]-1, ev[2], 'ct'), dt))
+                #self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]-1, ev[2], 'ct'), dt))
+                self.triggers_in = np.insert(self.triggers_in, 0, np.array((ev[0], ev[1]-1, ev[2], 'ct'), dt))
                 self.ct_counts += 1
             elif i == 3 and ev[1] < (int(np.sqrt(self.ncell)) - 1): 
                 #print(f'Crosstalk down: {np.array((ev[0], ev[1]+1, ev[2]), dt)}')
-                self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]+1, ev[2], 'ct'), dt))
+                #self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1]+1, ev[2], 'ct'), dt))
+                self.triggers_in = np.insert(self.triggers_in, 0, np.array((ev[0], ev[1]+1, ev[2], 'ct'), dt))
                 self.ct_counts += 1
 
 
@@ -140,6 +147,7 @@ class SiPM:
             taf = np.random.exponential(self.cellmap[ev[0], ev[1]].tau_af)
             #print(f'Af: {np.array((ev[0], ev[1], ev[2]+taf), dt)}')
             self.triggers_in = np.append(self.triggers_in, np.array((ev[0], ev[1], ev[2]+taf, 'af'), dt))
+            self.triggers_in = np.sort(self.triggers_in, order='time' )
 
 
     def process_photon(self, ev):
@@ -157,7 +165,7 @@ class SiPM:
             self.triggers_out = np.vstack((self.triggers_out, np.array([g, ev[2]])))
             self.cellmap[ev[0], ev[1]].last_trigger_time = ev[2]
             
-        self.triggers_in = np.sort(self.triggers_in, order='time' )
+        #self.triggers_in = np.sort(self.triggers_in, order='time' )
         
 
 def run_simulation(sipm, data):
@@ -170,7 +178,8 @@ def run_simulation(sipm, data):
     sipm.triggers_in = np.sort(sipm.triggers_in, order='time' )
 
     while len(sipm.triggers_in) > 0:
-        #print(sipm.triggers_in[0])        
+        #print(sipm.triggers_in[0])  
+        #print('Ciao')      
         sipm.process_photon(sipm.triggers_in[0])
 
     #print(f'***************** \n {sipm.triggers_in}')
@@ -185,19 +194,12 @@ def run_simulation(sipm, data):
 
 if __name__ == '__main__':
 
-    ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.2, 3e6, 0.04, 0.12
+    ncell, pde, dark_count_rate, p_ct, p_af = 57600, 0.3, 3e6, 0.04, 0.12
     sipm = SiPM(ncell, pde, dark_count_rate, p_ct, p_af)
     sipm.initialize_sipm()
+    print(sipm.cellmap[0][0].pde)
 
-    f = 'C:/Users/Marco/Desktop/results_C115_100ev/detect2.raw'
-
-    data = np.fromfile(f, dtype=np.float32, sep="")
-    data = np.reshape(data, (int(len(data)/4), 4))
-    data = data[data[:,0]==1]
     
-    sipm.signal_ampl = run_simulation(sipm, data)
-    plt.plot(sipm.all_time, sipm.signal_ampl)
-    plt.show()
     
     
 

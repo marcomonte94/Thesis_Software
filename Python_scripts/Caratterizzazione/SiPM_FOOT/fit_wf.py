@@ -43,7 +43,7 @@ for i in range(5, len(peaks)-5):
         if compute_area(ampl, peaks[i], time[1]-time[0]) < 2e-9:
             a = np.vstack((a, ampl[peaks[i]-200 : peaks[i]+900]))
 
-a = np.mean(a, axis=0)
+a = np.mean(a, axis=0) /1e4
 
 def fitfunc(t, a1, a2, tf, ts):
     #return np.heaviside(t-t0, 0) * np.exp(-(t-t0)/t_recovery)
@@ -57,7 +57,7 @@ def f(t, t0, a1, a2, t_ds, t_df, t_r):
 tfit = np.arange(len(a))*1e-10
 
 #p0 = [1e-2, 1e-2, 5e-9, 30e-9]
-p0 = [1e-8, 1e-2, 1e-2, 2e-8, 1e-9, 1e-10]
+p0 = [1e-8, 1e-6, 1e-6, 2e-8, 1e-9, 1e-10]
 popt, pcov = curve_fit(f, tfit, a, p0=p0)
 print(f't0: {popt[0]}')
 print(f'a1: {popt[1]}')

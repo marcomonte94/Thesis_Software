@@ -1,9 +1,12 @@
 import pylab as plt
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 
 datapath = f'C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id31/risultati.txt'
 g, dg, ct, d_ct, dcr, d_dcr, af, d_af = np.loadtxt(datapath, unpack=True)
+
 v = np.arange(116, 125)
 #v = np.arange(120, 129)
 plt.style.use('thesis')
@@ -43,13 +46,12 @@ def f(x, a, b):
 def f(x, a, b):
     return a *(x) * (1- np.exp(-b*(x)))
 
-
 xfit, yfit, dy = (v-Vbr)/2, ct*100, d_ct*100
 p0 = [1,1]
 
 popt, pcov = curve_fit(f, xfit, yfit, p0=p0, sigma=dy)
 print(popt)
-chi2 = sum(((yfit - f(xfit, *popt)) / dy)**2.) / (len(g)-2)
+#chi2 = sum(((yfit - f(xfit, *popt)) / dy)**2.) / (len(g)-2)
 
 _x = np.linspace(min(xfit)-0.3, max(xfit)+0.3, 100)
 plt.figure(figsize=[8, 6])
@@ -59,6 +61,11 @@ plt.plot(_x, f(_x, *popt), color='blue')
 plt.errorbar(xfit, yfit, dy, fmt='.', color='black')
 plt.ylabel('$P_{cross-pulse} [\%]$')
 plt.xlabel('Overvoltage [V]')
+
+xfit = np.insert(xfit, 0, 0)
+yfit = np.insert(yfit, 0, 0)
+s3 = InterpolatedUnivariateSpline(xfit, yfit, k=3)
+plt.plot(xfit, s3(xfit), color='red')
 
 ## DARK COUNT RATE
 
@@ -106,7 +113,11 @@ plt.plot(xfit, yfit, '.', color='black')
 plt.ylabel('$P_{after-pulse} [\%]$')
 plt.xlabel('Overvoltage [V]')
 
-
+xfit = np.insert(xfit, 0, 0)
+yfit = np.insert(yfit, 0, 0)
+s3 = InterpolatedUnivariateSpline(xfit, yfit, k=3)
+plt.plot(xfit, s3(xfit), color='red')
+plt.grid()
 
 
 plt.show()

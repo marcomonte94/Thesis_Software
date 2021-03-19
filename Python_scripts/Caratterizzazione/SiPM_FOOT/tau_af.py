@@ -1,4 +1,9 @@
-all_amplitude = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/124/all_ampl.txt', unpack=True)
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+from scipy.optimize import curve_fit
+
+all_amplitude = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/120/all_ampl.txt', unpack=True)
 all_delay = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/120/all_delay.txt', unpack=True)
 
 bins_log = 10**np.arange(-3, +2, 0.02)
@@ -41,8 +46,13 @@ plt.xlabel('Time distance [$\mu s$]')
 
 _x = 0.5 * (bins_log[1:] + bins_log[:-1])
 _y = -popt[1]*popt[0]*(np.exp(-bins_log[1:]/popt[1]) - np.exp(-bins_log[:-1]/popt[1]))
+i, j = popt
 #print(len(y_data[y_data > _y]))
 plt.plot(_x, _y, color='red', label='Exponential fit')
+#plt.plot(_x, yyy+_y, color='green')
+#_yy = -l*k*(np.exp(-bins_log[1:]/l) - np.exp(-bins_log[:-1]/l)) + _y
+#plt.plot(_x, _yy, color='green')
+
 
 yaf = ydata[_x < 1e-1] - _y[_x < 1e-1]
 yaf = yaf[yaf > 0]
@@ -64,10 +74,12 @@ xf = 0.5 * (bb[1:] + bb[:-1])
 plt.plot(xf, yf)
 plt.figure()
 plt.plot(xf, y-yf, '.', color='black')
-yy = y-yf
+yy = (y-yf)
 m = np.logical_and(xf>0.02, xf<0.1)
 p0 = [1e5, 0.1]
 popt, pcov = curve_fit(fitfunc, xf[m], yy[m], p0)
+k, l = popt
+yyy = -popt[1]*popt[0]*(np.exp(-bins_log[1:]/popt[1]) - np.exp(-bins_log[:-1]/popt[1]))
 plt.plot(xf, fitfunc(xf, *popt))
 plt.show()
 
