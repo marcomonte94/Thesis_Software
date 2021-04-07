@@ -10,7 +10,7 @@ def f(x, a):
 
 popt, pcov = curve_fit(f, i_ref, i_cal)
 
-plt.figure(figsize=[8, 6])
+plt.figure()
 plt.rc('font', size=12)
 plt.plot(i_ref, i_cal, '.', color='black')
 x = np.linspace(0, max(i_ref), 100)

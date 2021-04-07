@@ -51,5 +51,14 @@ if __name__ == '__main__':
         res = np.append(res, charge_map(q, myBar))
 
     res = np.reshape(res, (20, 20))
-    plt.imshow(res)
-
+    plt.figure(figsize=[7., 5.])
+    plt.rc('font', size=12)
+    plt.xlabel('Rear Bar')
+    plt.ylabel('Front Bar')
+    plt.imshow(res, cmap='jet')
+    xx = np.arange(0, 20, 2)
+    yy = np.arange(20, 40, 2)
+    plt.xticks(xx, labels=xx)
+    plt.yticks(xx, labels=yy)
+    plt.colorbar()
+    plt.show()

@@ -20,7 +20,7 @@ dt_evt = np.dtype([
 
 class Microcell:
 
-    def __init__(self, gain=1, overvoltage=1, pde=0.2, t_df=1.21, t_ds=19.77, t_rise=3.46):
+    def __init__(self, gain=1, overvoltage=1, pde=0.2, t_df=1.21, t_ds=24.8, t_rise=0.98):
         self.gain = gain # expressed as unit of overvoltage
         self.overvoltage = overvoltage
         self.pde = pde
@@ -47,12 +47,13 @@ class Microcell:
 
     def generate_signal(self, ev, t):
         t0 = ev['time']
-        a1, a2 = 7.1e-6, 3.16e-6
-        signal = (a1*np.exp(-(t-t0)/self.t_ds) + a2*np.exp(-(t-t0)/self.t_df) - (a1+a2)*np.exp(-(t-t0)/self.t_rise))
+        a1, a2 = -4.1, -4.13
+        #signal = (a1*np.exp(-(t-t0)/self.t_ds) + a2*np.exp(-(t-t0)/self.t_df) - (a1+a2)*np.exp(-(t-t0)/self.t_rise))
         #signal = (1.6e-19 * 50 * 5.5e5 / 2e-8) * np.exp(-(t-t0)/20)
+        signal = (a1*np.exp(-(t-t0)/self.t_rise) + a2*np.exp(-(t-t0)/self.t_ds) )
         signal *= np.heaviside(t-t0, 0) 
         #print(f'OH {self.eval_gain(ev)} {max(signal)}')
-        return self.eval_gain(ev) * signal*41.5
+        return self.eval_gain(ev) * signal*4.4e-5
 
     
 class SiPM: 

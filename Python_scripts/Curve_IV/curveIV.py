@@ -118,12 +118,13 @@ def fitBreakDown(input_file):
     dVbr = np.sqrt(d*pcov*dT)
 
     plt.figure("{}".format(input_file))
-    plt.plot(v, np.sqrt(i), label='I-V curve')
+    plt.rc('font', size=12)
+    plt.plot(v, np.sqrt(i), color='blue', label='I-V curve')
     plt.xlabel('Voltage [V]')
     plt.ylabel('$\sqrt{I}$ [$\sqrt{A}$]')
     plt.yscale("log")
 
-    plt.plot(v_fit, fitfunc(v_fit, *popt), label='Fit $V_{BR}$')
+    plt.plot(v_fit, fitfunc(v_fit, *popt), color='red', label='Fit $V_{BR}$')
     plt.legend(loc='best')
     print('Vbr: {} +/- {}'.format(-popt[1]/popt[0], dVbr))
     

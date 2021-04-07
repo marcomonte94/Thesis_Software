@@ -25,7 +25,7 @@ def attenuation(charge_A, charge_B, myBar):
         plt.rc('font', size=12)
         plt.xlabel('Charge')
         plt.ylabel('Counts')
-        y, edges, _ = plt.hist(charge_A[ev_GOOD, myBar], bins=50, color='blue')
+        y, edges, _ = plt.hist(charge_A[ev_GOOD, myBar], bins=50, color='blue', label='Entries')
 
         x = 0.5 * (edges[1:] + edges[:-1])
         #plt.show()
@@ -35,9 +35,10 @@ def attenuation(charge_A, charge_B, myBar):
         p0 = [40, 2, 0.3]
         popt, pcov = curve_fit(fitfunc, x, y, p0=p0, sigma=None)
         _x = np.linspace(0, max(x), 1000)
-        plt.plot(_x, fitfunc(_x, *popt), color='red')
+        plt.plot(_x, fitfunc(_x, *popt), color='red', label='Landau fit')
         q = np.append(q, popt[1])
         dq = np.append(dq, np.sqrt(pcov.diagonal()[1]))
+        plt.legend(loc='best')
         #plt.show()
         plt.close()
     xfit, yfit, dy = np.arange(1, 41, 2), q, dq
@@ -47,7 +48,7 @@ def attenuation(charge_A, charge_B, myBar):
 
     p0 = [4, 20, 0.3]
     popt, pcov = curve_fit(f, xfit, yfit, p0=p0, sigma=None)
-    print(popt)
+    print(f'{popt[1]} +- {np.sqrt(pcov.diagonal()[1])}')
     plt.figure(figsize=[7., 5.])
     plt.rc('font', size=12)
     plt.errorbar(xfit, yfit, dy, fmt='.', capsize=2, elinewidth=0.5, color='black')
@@ -70,9 +71,14 @@ if __name__ == '__main__':
     #myBar = 3
         l = np.append(l, attenuation(a, b, myBar))
 
-    plt.figure()
-    plt.hist(l, bins=40)
-
+    plt.figure(figsize=[7., 5.])
+    h, bins = np.histogram(l, bins=10)
+    width = 1* (bins[1] - bins[0])
+    center = (bins[:-1] + bins[1:]) / 2
+    plt.bar(center, h, align='center', width=width, color='blue', edgecolor="k")
+    plt.xlabel('Attenuation length [cm]')
+    plt.ylabel('Occurrences')
+    plt.xlim(6, 20)
     plt.show()
 
 

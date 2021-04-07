@@ -81,10 +81,12 @@ if __name__ == '__main__':
     elif args.debug == '1':
 
         if args.graphs == '1':
-            plt.figure()
-            plt.hist(data['x'], bins=len(data))
-            plt.figure()
-            plt.hist(data['y'], bins=len(data))
+            plt.figure(figsize=[7., 5.])
+            plt.rc('font', size=12)
+            plt.xlabel('Distance from left side [mm]')
+            plt.ylabel('Occurrences')
+            plt.hist(data['x']*25e-3, bins=np.linspace(0, 20, 800))
+            plt.xlim(0, 20)
             plt.figure()
             plt.hist(data['time'], bins=len(data))
 

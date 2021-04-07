@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import os
 from scipy.optimize import curve_fit
 
-all_amplitude = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/120/all_ampl.txt', unpack=True)
-all_delay = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id11/120/all_delay.txt', unpack=True)
+all_amplitude = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id2/120/all_ampl.txt', unpack=True)
+all_delay = np.loadtxt('C:/Users/Marco/Desktop/Analisi_SiPM/Caratterizzazione/id2/120/all_delay.txt', unpack=True)
 
 bins_log = 10**np.arange(-3, +2, 0.02)
 bins_norm = np.linspace(1e-3, 1e+2, 2000)
@@ -72,15 +72,22 @@ y, e, _ =  plt.hist(all_delay, bins=bb)
 yf = -popt[1]*popt[0]*(np.exp(-bb[1:]/popt[1]) - np.exp(-bb[:-1]/popt[1]))
 xf = 0.5 * (bb[1:] + bb[:-1])
 plt.plot(xf, yf)
-plt.figure()
-plt.plot(xf, y-yf, '.', color='black')
+
 yy = (y-yf)
 m = np.logical_and(xf>0.02, xf<0.1)
 p0 = [1e5, 0.1]
 popt, pcov = curve_fit(fitfunc, xf[m], yy[m], p0)
 k, l = popt
 yyy = -popt[1]*popt[0]*(np.exp(-bins_log[1:]/popt[1]) - np.exp(-bins_log[:-1]/popt[1]))
-plt.plot(xf, fitfunc(xf, *popt))
+
+plt.figure(figsize=[7., 5.])
+plt.rc('font', size=12)
+plt.xlabel('Time distance [$\mu s$]')
+mask = np.logical_and(xf>0.013, xf<0.1)
+plt.ylabel('Afterpulse counts')
+plt.plot(xf[mask], yy[mask], '.', color='black')
+_x = np.linspace(min(xf[mask]), max(xf[mask]), 100)
+plt.plot(_x, fitfunc(_x, *popt), color='red')
 plt.show()
 
 

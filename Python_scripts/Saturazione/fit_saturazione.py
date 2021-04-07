@@ -72,7 +72,7 @@ dy += (a*n_ph * np.exp(-b*n_ph) * db1) ** 2
 chi2 = sum(((n_fired - fitfunc(n_ph, *popt)) / np.sqrt(dy))**2.)
 print(chi2 / (len(Q)-2))
 
-plt.figure(figsize=[7., 5.])
+plt.figure()
 plt.rc('font', size=12)
 #plt.plot(n_ph, n_fired, '.', color='black')
 plt.errorbar(n_ph, n_fired, dncell, dnph, fmt='.', capsize=2, elinewidth=0.5, color='black')

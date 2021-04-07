@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.stats import norm
+import matplotlib.colors as mcolors
+
 
 def time_resolution(t, myBar):
 
@@ -25,21 +27,29 @@ def time_resolution(t, myBar):
         plt.rc('font', size=12)
         plt.xlabel('Charge')
         plt.ylabel('Counts')
-        ydata, edges, _ = plt.hist(dt, bins=1000, color='blue')
+        ydata, edges, _ = plt.hist(dt, bins=1000, color='blue', label='Entries')
         xdata = 0.5 * (edges[1:] + edges[:-1])
 
         def gaus(x, a, mu, sigma):
             return a * norm.pdf(x, mu, sigma)
 
-        p0 = [max(ydata), 0, 2]
+        p0 = [max(ydata), 0, 0.3]
         popt, pcov = curve_fit(gaus, xdata, ydata, p0)
-        print(popt[2])
+        print(f'{popt[2]} +- {np.sqrt(pcov.diagonal()[2])}')
+
         sigma = np.append(sigma, popt[2])
-        _x = np.linspace(-10, 10, 1000)
-        plt.plot(_x, gaus(_x, *popt), color='red')
-        plt.xlim(-4, 4)
+        _x = np.linspace(-2, 2, 1000)
+        plt.plot(_x, gaus(_x, *popt), color='red', label='Gaussian fit')
+        plt.ylabel('Occurrences')
+        plt.xlabel('Time difference between layers [ns]')
+        plt.xlim(-3, 3)
+        plt.legend(loc='best')
+        if myBar == 7 and otherBar == 36:
+           plt.show()
+        else:
+            plt.close()
         #plt.show()
-        plt.close()
+        #plt.close()
 
     return sigma
 
@@ -57,7 +67,30 @@ if __name__ == '__main__':
         res = np.append(res, time_resolution(t, myBar))
 
     res = np.reshape(res, (20, 20))
-    plt.imshow(res)
+
+
+    plt.figure()
+    plt.rc('font', size=12)
+    plt.xlabel('Rear Layer')
+    plt.ylabel('Front Layer')
+    plt.imshow(res, cmap='jet')
+    xx = np.arange(0, 20, 2)
+    yy = np.arange(20, 40, 2)
+    plt.xticks(xx, labels=xx)
+    plt.yticks(xx, labels=yy)
+    plt.colorbar()
+
+    plt.figure()
+    plt.rc('font', size=12)
+    h, bins = np.histogram(res.flatten(), bins=20)
+    width = 1* (bins[1] - bins[0])
+    center = (bins[:-1] + bins[1:]) / 2
+    plt.bar(center, h, align='center', width=width, color='blue', edgecolor="k")
+    plt.xlabel('Time resolution [ns]')
+    plt.ylabel('Occurrences')
+
+
+    plt.show()
 
 
 
